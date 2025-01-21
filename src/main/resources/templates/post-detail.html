@@ -1,0 +1,83 @@
+<style>
+    /* 기존 스타일에 추가 */
+    .delete-btn {
+        background-color: #dc3545;
+        color: white;
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+</style>
+
+<script>
+    // 기존 toggleReplyForm 함수는 유지하고 아래 함수들 추가
+    function deletePost(postId) {
+        if (confirm('게시글을 삭제하시겠습니까?')) {
+            fetch(`/post/${postId}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    alert('게시글이 삭제되었습니다.');
+                    window.location.href = '/';
+                })
+                .catch(error => {
+                    alert('삭제 중 오류가 발생했습니다.');
+                });
+        }
+    }
+
+    function deleteComment(postId, commentId) {
+        if (confirm('댓글을 삭제하시겠습니까?')) {
+            fetch(`/comment/${postId}/${commentId}`, {
+                method: 'DELETE'
+            })
+                .then(response => {
+                    alert('댓글이 삭제되었습니다.');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('삭제 중 오류가 발생했습니다.');
+                });
+        }
+    }
+</script>
+
+<!-- 게시글 제목 부분 수정 -->
+<div class="post-header">
+    <!-- 작성자와 현재 로그인한 사용자가 같을 때만 삭제 버튼 표시 -->
+    <button th:if="${#authentication.principal.email == post.user.email}"
+            th:onclick="'deletePost(' + ${post.id} + ')'"
+            class="delete-btn">삭제</button>
+    <h1 class="post-title" th:text="${post.head}">제목</h1>
+</div>
+
+<!-- 댓글 항목 부분 수정 -->
+<div th:each="comment : ${post.commentList}" th:if="${comment.parent == null}" class="comment-item">
+    <div style="display: flex; align-items: center;">
+        <!-- 작성자와 현재 로그인한 사용자가 같을 때만 삭제 버튼 표시 -->
+        <button th:if="${#authentication.principal.email == comment.user.email}"
+                th:onclick="'deleteComment(' + ${post.id} + ',' + ${comment.id} + ')'"
+                class="delete-btn">삭제</button>
+        <div th:text="${comment.content}">댓글 내용</div>
+    </div>
+    <!-- 나머지 댓글 관련 코드는 그대로 유지 -->
+</div>
+
+<!-- 대댓글 항목 부분도 수정 -->
+<div th:each="reply : ${comment.child}" class="nested-comment">
+    <div style="display: flex; align-items: center;">
+        <!-- 작성자와 현재 로그인한 사용자가 같을 때만 삭제 버튼 표시 -->
+        <button th:if="${#authentication.principal.email == reply.user.email}"
+                th:onclick="'deleteComment(' + ${post.id} + ',' + ${reply.id} + ')'"
+                class="delete-btn">삭제</button>
+        <div th:text="${reply.content}">대댓글 내용</div>
+    </div>
+    <div class="post-info" th:text="${'작성자: ' + reply.user.email}">대댓글 작성자</div>
+</div>

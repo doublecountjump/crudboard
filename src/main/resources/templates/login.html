@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>로그인</title>
+</head>
+<body>
+<!-- 일반 로그인 폼 -->
+<form th:action="@{/login}" method="post">
+    <div>
+        <input type="text" name="username" placeholder="아이디"/>
+    </div>
+    <div>
+        <input type="password" name="password" placeholder="비밀번호"/>
+    </div>
+    <button type="submit">로그인</button>
+</form>
+
+<!-- GitHub 로그인 버튼 -->
+<div>
+    <a href="/oauth2/authorization/github" class="btn-github">
+        GitHub으로 로그인
+    </a>
+</div>
+</body>
+</html>
