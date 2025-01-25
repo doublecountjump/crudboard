@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
 
 import java.util.ArrayList;
@@ -28,7 +29,9 @@ public class Post {
     @JoinColumn(name = "user_id")
     private User user;
 
+
     @OneToMany(mappedBy = "post",fetch = FetchType.EAGER,cascade = CascadeType.ALL,orphanRemoval = true)
+    @BatchSize(size = 10)
     private List<Comment> commentList = new ArrayList<>();
 
 

@@ -1,83 +1,187 @@
-<style>
-    /* 기존 스타일에 추가 */
-    .delete-btn {
-        background-color: #dc3545;
-        color: white;
-        padding: 5px 10px;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        margin-right: 10px;
-    }
-    .post-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-</style>
-
-<script>
-    // 기존 toggleReplyForm 함수는 유지하고 아래 함수들 추가
-    function deletePost(postId) {
-        if (confirm('게시글을 삭제하시겠습니까?')) {
-            fetch(`/post/${postId}`, {
-                method: 'DELETE'
-            })
-                .then(response => {
-                    alert('게시글이 삭제되었습니다.');
-                    window.location.href = '/';
-                })
-                .catch(error => {
-                    alert('삭제 중 오류가 발생했습니다.');
-                });
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 상세</title>
+    <style>
+        .post-container, .comment-container {
+            width: 80%;
+            margin: 20px auto;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
         }
-    }
-
-    function deleteComment(postId, commentId) {
-        if (confirm('댓글을 삭제하시겠습니까?')) {
-            fetch(`/comment/${postId}/${commentId}`, {
-                method: 'DELETE'
-            })
-                .then(response => {
-                    alert('댓글이 삭제되었습니다.');
-                    location.reload();
-                })
-                .catch(error => {
-                    alert('삭제 중 오류가 발생했습니다.');
-                });
+        .post-title {
+            font-size: 24px;
+            margin-bottom: 10px;
         }
-    }
-</script>
+        .post-info {
+            color: #666;
+            margin-bottom: 20px;
+        }
+        .post-content {
+            margin-top: 20px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 30px;
+        }
+        .comment-section {
+            margin-top: 40px;
+        }
+        .comment-list {
+            border-bottom: 2px solid #ddd;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+        }
+        .comment-form {
+            margin: 20px 0;
+        }
+        .comment-input {
+            width: 85%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        .comment-btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .comment-item {
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+            margin-bottom: 10px;
+        }
+        .reply-form {
+            margin-left: 30px;
+            margin-top: 10px;
+            display: none;
+        }
+        .reply-toggle {
+            color: #007bff;
+            cursor: pointer;
+            margin-top: 5px;
+            font-size: 0.9em;
+        }
+        .nested-comment {
+            margin-left: 30px;
+            border-left: 2px solid #eee;
+            padding-left: 10px;
+        }
+        .comment-header {
+            font-size: 18px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .delete-btn {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+    </style>
+    <script>
+        function toggleReplyForm(commentId) {
+            const replyForm = document.getElementById('reply-form-' + commentId);
+            if (replyForm.style.display === 'none') {
+                replyForm.style.display = 'block';
+            } else {
+                replyForm.style.display = 'none';
+            }
+        }
 
-<!-- 게시글 제목 부분 수정 -->
-<div class="post-header">
-    <!-- 작성자와 현재 로그인한 사용자가 같을 때만 삭제 버튼 표시 -->
-    <button th:if="${#authentication.principal.email == post.user.email}"
-            th:onclick="'deletePost(' + ${post.id} + ')'"
-            class="delete-btn">삭제</button>
-    <h1 class="post-title" th:text="${post.head}">제목</h1>
-</div>
-
-<!-- 댓글 항목 부분 수정 -->
-<div th:each="comment : ${post.commentList}" th:if="${comment.parent == null}" class="comment-item">
-    <div style="display: flex; align-items: center;">
-        <!-- 작성자와 현재 로그인한 사용자가 같을 때만 삭제 버튼 표시 -->
-        <button th:if="${#authentication.principal.email == comment.user.email}"
-                th:onclick="'deleteComment(' + ${post.id} + ',' + ${comment.id} + ')'"
+        function deletePost(postId) {
+            if (confirm('게시글을 삭제하시겠습니까?')) {
+                fetch(`/post/${postId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if(response.ok) {
+                            alert('게시글이 삭제되었습니다.');
+                            window.location.href = '/';
+                        } else {
+                            throw new Error('삭제 실패');
+                        }
+                    })
+                    .catch(error => {
+                        alert('삭제 중 오류가 발생했습니다.');
+                    });
+            }
+        }
+    </script>
+</head>
+<body>
+<div class="post-container">
+    <div class="post-header">
+        <button th:if="${currentUserEmail == post.user.email}"
+                th:onclick="'deletePost(' + ${post.id} + ')'"
                 class="delete-btn">삭제</button>
-        <div th:text="${comment.content}">댓글 내용</div>
+        <h1 class="post-title" th:text="${post.head}">제목</h1>
     </div>
-    <!-- 나머지 댓글 관련 코드는 그대로 유지 -->
-</div>
+    <div class="post-info">
+        <span th:text="${'작성자: ' + post.user.email}">작성자</span>
+    </div>
+    <div class="post-content" th:text="${post.context}">
+        내용
+    </div>
 
-<!-- 대댓글 항목 부분도 수정 -->
-<div th:each="reply : ${comment.child}" class="nested-comment">
-    <div style="display: flex; align-items: center;">
-        <!-- 작성자와 현재 로그인한 사용자가 같을 때만 삭제 버튼 표시 -->
-        <button th:if="${#authentication.principal.email == reply.user.email}"
-                th:onclick="'deleteComment(' + ${post.id} + ',' + ${reply.id} + ')'"
-                class="delete-btn">삭제</button>
-        <div th:text="${reply.content}">대댓글 내용</div>
+    <!-- 댓글 섹션 -->
+    <div class="comment-section">
+        <div class="comment-header">댓글</div>
+
+        <!-- 댓글 목록 -->
+        <div class="comment-list">
+            <!-- 댓글이 없는 경우 -->
+            <div th:if="${post.commentList.empty}" class="comment-item">
+                작성된 댓글이 없습니다.
+            </div>
+
+            <!-- 댓글 있는 경우 -->
+            <div th:each="comment : ${post.commentList}" th:if="${comment.parent == null}" class="comment-item">
+                <div th:text="${comment.content}">댓글 내용</div>
+                <div class="post-info" th:text="${'작성자: ' + comment.user.email}">댓글 작성자</div>
+
+                <!-- 답글 달기 버튼 -->
+                <div class="reply-toggle" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'">
+                    답글 달기
+                </div>
+
+                <!-- 답글 작성 폼 -->
+                <div th:id="'reply-form-' + ${comment.id}" class="reply-form">
+                    <form th:action="@{/comment/{postId}/{parentId}(postId=${post.id},parentId=${comment.id})}" method="post">
+                        <input type="text" name="content" class="comment-input" placeholder="답글을 입력하세요" required>
+                        <button type="submit" class="comment-btn">답글 작성</button>
+                    </form>
+                </div>
+
+                <!-- 대댓글 목록 -->
+                <div th:each="reply : ${comment.child}" class="nested-comment">
+                    <div th:text="${reply.content}">대댓글 내용</div>
+                    <div class="post-info" th:text="${'작성자: ' + reply.user.email}">대댓글 작성자</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 댓글 작성 폼 -->
+        <div class="comment-form">
+            <form th:action="@{/comment/{postId}(postId=${post.id})}" method="post">
+                <input type="text" name="content" class="comment-input" placeholder="댓글을 입력하세요" required>
+                <button type="submit" class="comment-btn">댓글 작성</button>
+            </form>
+        </div>
     </div>
-    <div class="post-info" th:text="${'작성자: ' + reply.user.email}">대댓글 작성자</div>
 </div>
+</body>
+</html>

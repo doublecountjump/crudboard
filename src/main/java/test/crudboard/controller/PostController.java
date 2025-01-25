@@ -47,18 +47,20 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public String detailPost(@PathVariable Long id, Model model){
+    public String detailPost(@PathVariable Long id,@AuthenticationPrincipal Object user, Model model){
         Post post = postService.getPostById(id);
+        String userEmail = getUserEmail(user);
         model.addAttribute("post", post);
+        model.addAttribute("currentUserEmail", userEmail);
         return "post-detail.html";
     }
 
 
     @DeleteMapping("/{id}")
     @CheckResourceOwner(type = ResourceType.POST)
-    public String deletePost(@PathVariable Long id, @AuthenticationPrincipal Object user){
+    @ResponseBody
+    public void deletePost(@PathVariable Long id, @AuthenticationPrincipal Object user){
         postService.deletePost(id);
-        return "redirect:/";
     }
     private String getUserEmail(Object user) {
         if (user instanceof OAuth2User auth2User) {
@@ -66,6 +68,6 @@ public class PostController {
         } else if (user instanceof LocalUserDetails localUser) {
             return localUser.getUsername();
         }
-        throw new IllegalArgumentException("Unsupported user type");
+        else return null;
     }
 }

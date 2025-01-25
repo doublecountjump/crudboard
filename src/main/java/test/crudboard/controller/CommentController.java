@@ -38,9 +38,9 @@ public class CommentController {
                              @AuthenticationPrincipal Object user){
 
         log.info("context :{} ", content);
-        Map<String, String> userType = getUserType(user);
+        String userEmail = getUserEmail(user);
 
-        Comment comment = commentService.saveParentComment(postId, content, userType);
+        Comment comment = commentService.saveParentComment(postId, content, userEmail);
 
         return "redirect:/post/" + postId;
     }
@@ -48,21 +48,17 @@ public class CommentController {
     @PostMapping("/{postId}/{parentId}")
     public String addReplyComment(@PathVariable Long postId, @PathVariable Long parentId,
                                   String content, @AuthenticationPrincipal Object user){
-        Map<String, String> userType = getUserType(user);
-        commentService.saveChildComment(postId, parentId, content, userType);
+        String userEmail = getUserEmail(user);
+        commentService.saveChildComment(postId, parentId, content, userEmail);
 
         return "redirect:/post/" + postId;
     }
 
-    private Map<String, String> getUserType(Object user){
+    private String getUserEmail(Object user){
         if(user instanceof OAuth2User auth2User){
-            HashMap<String, String> map = new HashMap<>();
-            map.put("oauth",auth2User.getName());
-            return map;
+            return auth2User.getName();
         }else if(user instanceof LocalUserDetails localUser){
-            HashMap<String, String> map = new HashMap<>();
-            map.put("local",localUser.getUsername());
-            return map;
+            return localUser.getUsername();
         }else throw new BadCredentialsException("사용자가 올바르지 않습니다");
     }
 

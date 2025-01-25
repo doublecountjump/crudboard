@@ -2,6 +2,7 @@ package test.crudboard.service;
 
 
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,7 @@ import java.util.List;
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class PostService{
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
@@ -27,7 +29,7 @@ public class PostService{
 
         Post post = Post.builder()
                 .head(postDto.getHead())
-                .context(postDto.getHead())
+                .context(postDto.getContext())
                 .build();
         post.setUser(user);
 
@@ -38,14 +40,14 @@ public class PostService{
     }
 
     public Post getPostById(Long id){
-        return postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+        return postRepository.findPostByUserId(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
     }
 
     public boolean isGithubPostOwner(Long postId, String githubId){
         return postRepository.existsPostByIdAndUserGithubId(postId, githubId);
     }
 
-    public boolean isLocalPostOwner(Long postId, String userEmail){
+    public boolean isPostOwner(Long postId, String userEmail){
         return postRepository.existsPostByIdAndUserEmail(postId, userEmail);
     }
 

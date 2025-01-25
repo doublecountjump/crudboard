@@ -31,24 +31,22 @@ public class MainController {
     private final PostService postService;
     @GetMapping("/")
     public String home(@AuthenticationPrincipal Object user, Model model){
+        String name;
         if(user instanceof OAuth2User){
             OAuth2User auth2User = (OAuth2User) user;
-            String name = auth2User.getName();
-            User authUser = userRepository.findUserByGithubId(name).get();
-            log.info("name : {}", name);
-            model.addAttribute(authUser);
+            name = auth2User.getName();
         } else if (user instanceof UserDetails) {
             LocalUserDetails userDetails = (LocalUserDetails) user;
-            log.info("LocalName : {}",userDetails.getUsername());
-            model.addAttribute("user", user);
+            name = userDetails.getUsername();
         }else {
-            log.info("User is neither OAuth2User nor UserDetails");
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             log.info("Current Authentication: {}", auth);
             if(auth != null) {
                 log.info("Authentication Principal type: {}", auth.getPrincipal().getClass().getName());
             }
+            name = null;
         }
+        model.addAttribute("user",name);
 
         List<TitleDto> titleList = postService.getTitleList();
 

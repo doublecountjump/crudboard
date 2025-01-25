@@ -43,17 +43,17 @@ public class ResourceOwnerAspect {
 
     private boolean checkPostOwner(Long resourceId, Object user) {
         if(user instanceof OAuth2User oAuth2User){
-            return postService.isGithubPostOwner(resourceId, oAuth2User.getName());
+            return postService.isPostOwner(resourceId, oAuth2User.getName());
         } else if (user instanceof LocalUserDetails userDetails) {
-            return postService.isLocalPostOwner(resourceId, userDetails.getUsername());
+            return postService.isPostOwner(resourceId, userDetails.getUsername());
         }else return false;
     }
 
     private boolean checkCommentOwner(Long resourceId, Object user) {
         if(user instanceof OAuth2User oAuth2User){
-            return commentService.isGithubCommentOwner(resourceId, oAuth2User.getName());
+            return commentService.isCommentOwner(resourceId, oAuth2User.getName());
         } else if (user instanceof LocalUserDetails userDetails) {
-            return commentService.isLocalCommentOwner(resourceId, userDetails.getUsername());
+            return commentService.isCommentOwner(resourceId, userDetails.getUsername());
         }else return false;
     }
 }
