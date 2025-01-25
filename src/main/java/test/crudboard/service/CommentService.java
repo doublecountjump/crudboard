@@ -50,4 +50,9 @@ public class CommentService {
     public boolean isCommentOwner(Long commentId, String name){
         return commentRepository.existsCommentByIdAndUserEmail(commentId, name);
     }
+
+    public void deleteComment(Long commentId) {
+        commentRepository.deleteById(commentId);
+        log.info("delete comment : {}" ,commentId);
+    }
 }

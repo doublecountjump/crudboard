@@ -14,6 +14,7 @@ import test.crudboard.provider.local.LocalUserDetails;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.service.CommentService;
 import test.crudboard.service.PostService;
+import test.crudboard.service.UserService;
 
 @Aspect
 @Component
@@ -21,6 +22,7 @@ import test.crudboard.service.PostService;
 public class ResourceOwnerAspect {
     private final PostService postService;
     private final CommentService commentService;
+    private final UserService userService;
 
     @Around("@annotation(checkResourceOwner)")
     public Object checkOwner(ProceedingJoinPoint pjp, CheckResourceOwner checkResourceOwner) throws Throwable{
@@ -31,6 +33,7 @@ public class ResourceOwnerAspect {
         boolean hasPermission = switch (checkResourceOwner.type()){
             case POST -> checkPostOwner(resourceId, user);
             case COMMENT -> checkCommentOwner(resourceId, user);
+            case USER -> checkUser(resourceId, user);
         };
 
         if (!hasPermission) {
@@ -54,6 +57,14 @@ public class ResourceOwnerAspect {
             return commentService.isCommentOwner(resourceId, oAuth2User.getName());
         } else if (user instanceof LocalUserDetails userDetails) {
             return commentService.isCommentOwner(resourceId, userDetails.getUsername());
+        }else return false;
+    }
+
+    private boolean checkUser(Long resourceId, Object user){
+        if(user instanceof OAuth2User oAuth2User){
+            return userService.isIdentification(resourceId, oAuth2User.getName());
+        } else if (user instanceof LocalUserDetails userDetails) {
+            return userService.isIdentification(resourceId, userDetails.getUsername());
         }else return false;
     }
 }

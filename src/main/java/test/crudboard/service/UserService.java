@@ -1,6 +1,7 @@
 package test.crudboard.service;
 
 
+import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.sun.jdi.request.DuplicateRequestException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -10,7 +11,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import test.crudboard.entity.User;
-import test.crudboard.entity.dto.UserDto;
+import test.crudboard.entity.dto.UserInfoDto;
+import test.crudboard.entity.dto.UserJoinDto;
 import test.crudboard.entity.enumtype.AuthProvider;
 import test.crudboard.entity.enumtype.Roles;
 import test.crudboard.repository.JpaUserRepository;
@@ -22,14 +24,14 @@ import test.crudboard.repository.JpaUserRepository;
 public class UserService {
     private final JpaUserRepository repository;
     private final PasswordEncoder encoder;
-    public User save(UserDto userDto){
+    public User save(UserJoinDto userJoinDto){
 
-        if(repository.findUserByEmail(userDto.getEmail()).isPresent()){
+        if(repository.findUserByEmail(userJoinDto.getEmail()).isPresent()){
             throw new DuplicateRequestException("user already exist");
         }
         User user = User.builder()
-                .email(userDto.getEmail())
-                .password(encoder.encode(userDto.getPassword()))
+                .email(userJoinDto.getEmail())
+                .password(encoder.encode(userJoinDto.getPassword()))
                 .provider(AuthProvider.LOCAL)
                 .roles(Roles.ROLE_USER)
                 .build();
@@ -40,5 +42,24 @@ public class UserService {
     public User findUserByEmail(String email){
         return repository.findUserByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("user not found"));
+    }
+
+    public boolean isIdentification(Long userId, String email) {
+        return repository.existsUserByIdAndEmail(userId, email);
+    }
+
+    public UserInfoDto getUserInfo(String email){
+        User user = repository.findUserByEmail(email).orElseThrow(() -> new EntityNotFoundException());
+
+        return UserInfoDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .githubId(user.getGithubId())
+                .avatar_url(user.getProfileImage())
+                .provider(user.getProvider())
+                .roles(user.getRoles())
+                .postList(user.getPostList())
+                .commentList(user.getCommentList())
+                .build();
     }
 }

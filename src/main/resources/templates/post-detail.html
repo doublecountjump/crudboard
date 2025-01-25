@@ -120,9 +120,30 @@
                     });
             }
         }
+
+        function deleteComment(postId, commentId) {
+            if (confirm('댓글을 삭제하시겠습니까?')) {
+                fetch(`/comment/${postId}/${commentId}`, {
+                    method: 'DELETE'
+                })
+                    .then(response => {
+                        if(response.ok) {
+                            window.location.reload();
+                        } else {
+                            throw new Error('삭제 실패');
+                        }
+                    })
+                    .catch(() => alert('삭제 중 오류가 발생했습니다.'));
+            }
+        }
     </script>
 </head>
 <body>
+
+<nav style="background-color: #333; padding: 1rem; margin-bottom: 2rem;">
+    <a href="/" style="color: white; text-decoration: none; font-size: 1.2rem;">메인화면</a>
+</nav>
+
 <div class="post-container">
     <div class="post-header">
         <button th:if="${currentUserEmail == post.user.email}"
@@ -150,7 +171,12 @@
 
             <!-- 댓글 있는 경우 -->
             <div th:each="comment : ${post.commentList}" th:if="${comment.parent == null}" class="comment-item">
-                <div th:text="${comment.content}">댓글 내용</div>
+                <div style="display: flex; align-items: center;">
+                    <button th:if="${currentUserEmail == comment.user.email}"
+                            th:onclick="'deleteComment(' + ${post.id} + ',' + ${comment.id} + ')'"
+                            class="delete-btn">삭제</button>
+                    <div th:text="${comment.content}">댓글 내용</div>
+                </div>
                 <div class="post-info" th:text="${'작성자: ' + comment.user.email}">댓글 작성자</div>
 
                 <!-- 답글 달기 버튼 -->
@@ -166,9 +192,14 @@
                     </form>
                 </div>
 
-                <!-- 대댓글 목록 -->
+                <!-- 대댓글 -->
                 <div th:each="reply : ${comment.child}" class="nested-comment">
-                    <div th:text="${reply.content}">대댓글 내용</div>
+                    <div style="display: flex; align-items: center;">
+                        <button th:if="${currentUserEmail == reply.user.email}"
+                                th:onclick="'deleteComment(' + ${post.id} + ',' + ${reply.id} + ')'"
+                                class="delete-btn">삭제</button>
+                        <div th:text="${reply.content}">대댓글 내용</div>
+                    </div>
                     <div class="post-info" th:text="${'작성자: ' + reply.user.email}">대댓글 작성자</div>
                 </div>
             </div>
