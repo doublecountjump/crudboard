@@ -32,10 +32,11 @@ import java.util.List;
 public class MainController {
     private final UserService userService;
     private final PostService postService;
+
     @GetMapping("/")
     public String home(@AuthenticationPrincipal Object authentication, Model model){
-        if(authentication != null){
-            String userEmail = getUserEmail(authentication);
+        String userEmail = getUserEmail(authentication);
+        if(userEmail != null){
             log.info("UserEmail: {}", userEmail);
             User user = userService.findUserByEmail(userEmail);
 
@@ -46,15 +47,13 @@ public class MainController {
                     .build();
 
             model.addAttribute("user", userInfoDto);
-        }
-        else {
+        }else {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             log.info("Current Authentication: {}", auth);
             if(auth != null) {
                 log.info("Authentication Principal type: {}", auth.getPrincipal().getClass().getName());
             }
         }
-
         List<TitleDto> titleList = postService.getTitleList();
 
         model.addAttribute("titleList",titleList);
@@ -81,8 +80,11 @@ public class MainController {
 
     @GetMapping("/mypage/{userId}")
     @CheckResourceOwner(type = ResourceType.USER)
-    public String myPage(@PathVariable Long userId, @AuthenticationPrincipal Object user){
+    public String myPage(@PathVariable Long userId, @AuthenticationPrincipal Object user, Model model){
+        UserInfoDto userInfo = userService.getUserInfo(getUserEmail(user));
 
+        model.addAttribute("userInfo",userInfo);
+        return "user-detail";
     }
     private String getUserEmail(Object user) {
         if (user instanceof OAuth2User auth2User) {
