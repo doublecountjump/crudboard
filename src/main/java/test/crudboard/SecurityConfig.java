@@ -33,12 +33,10 @@ public class SecurityConfig {
                 .formLogin(form -> form  // 폼 로그인 설정
                         .loginPage("/login")
                         .successHandler(loginSuccessHandler)
-                        .defaultSuccessUrl("/")
                 )
                 .oauth2Login(oauth2 -> oauth2  // OAuth2 로그인 설정
                         .loginPage("/login")
                         .successHandler(loginSuccessHandler)
-                        .defaultSuccessUrl("/")
                 )
                 .csrf(csrf -> csrf.disable())
                 .userDetailsService(localUserDetailsService)

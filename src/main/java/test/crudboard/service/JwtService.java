@@ -6,12 +6,14 @@ import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.WebUtils;
 import test.crudboard.entity.Token;
 import test.crudboard.entity.User;
 import test.crudboard.repository.JpaUserRepository;
@@ -20,6 +22,7 @@ import test.crudboard.repository.TokenRepository;
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Date;
 
 @Service
@@ -67,12 +70,9 @@ public class JwtService {
     }
 
     public String extractToken(HttpServletRequest request){
-        String header = request.getHeader("Authorization");
+        Cookie jwtCookie = WebUtils.getCookie(request, "jwt");
+        return jwtCookie != null ? jwtCookie.getValue() : null;
 
-        if(header != null && header.startsWith("Bearer ")){
-            return header.substring(7);
-        }
-        return null;
     }
 
     public Claims parseClaims(String token){

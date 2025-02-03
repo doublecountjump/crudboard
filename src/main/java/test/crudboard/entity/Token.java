@@ -2,14 +2,16 @@ package test.crudboard.entity;
 
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
 @Data
 @Entity
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class Token {
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,10 +20,7 @@ public class Token {
 
     private String refresh;
     private LocalDateTime expired;
-
-    @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    private String email;
 
     private boolean isValid;  // 토큰 유효성 상태
 

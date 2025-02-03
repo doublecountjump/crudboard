@@ -17,11 +17,16 @@ import test.crudboard.entity.Post;
 import test.crudboard.entity.User;
 import test.crudboard.entity.dto.PostDto;
 import test.crudboard.entity.enumtype.ResourceType;
+import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.provider.local.LocalUserDetails;
 import test.crudboard.provider.local.LocalUserDetailsService;
 import test.crudboard.service.PostService;
 import test.crudboard.service.UserService;
 
+
+/**
+ * 0203 getUserEmail 수정할것!!
+ */
 @Controller
 @Slf4j
 @RequiredArgsConstructor
@@ -32,9 +37,8 @@ public class PostController {
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create")
-    public String createPage(@AuthenticationPrincipal Object user, Model model){
-        String userEmail = getUserEmail(user);
-        User authUser = userService.findUserByEmail(userEmail);
+    public String createPage(@AuthenticationPrincipal JwtUserDetails user, Model model){
+        User authUser = userService.findUserById(user.getId());
         model.addAttribute("userId",authUser.getId());
         return "post";
     }
@@ -47,7 +51,7 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public String detailPost(@PathVariable Long id,@AuthenticationPrincipal Object user, Model model){
+    public String detailPost(@PathVariable Long id,@AuthenticationPrincipal JwtUserDetails user, Model model){
         Post post = postService.getPostById(id);
         String userEmail = getUserEmail(user);
         model.addAttribute("post", post);
@@ -59,7 +63,7 @@ public class PostController {
     @DeleteMapping("/{id}")
     @CheckResourceOwner(type = ResourceType.POST)
     @ResponseBody
-    public void deletePost(@PathVariable Long id, @AuthenticationPrincipal Object user){
+    public void deletePost(@PathVariable Long id){
         postService.deletePost(id);
     }
     private String getUserEmail(Object user) {

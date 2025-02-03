@@ -12,4 +12,5 @@ import java.util.Optional;
 public interface TokenRepository extends JpaRepository<Token,Long> {
 
     Optional<Token> findTokenByRefresh(String token);
+    Optional<Token> findTokenByEmail(String email);
 }
