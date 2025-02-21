@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import test.crudboard.annotation.CheckResourceOwner;
 import test.crudboard.entity.Comment;
 import test.crudboard.entity.enumtype.ResourceType;
+import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.provider.local.LocalUserDetails;
 import test.crudboard.service.CommentService;
 import test.crudboard.service.PostService;
@@ -34,10 +35,10 @@ public class CommentController {
 
     @PostMapping("/{postId}")
     public String addComment(@PathVariable Long postId, String content,
-                             @AuthenticationPrincipal Object user){
+                             @AuthenticationPrincipal JwtUserDetails user){
 
         log.info("context :{} ", content);
-        String userEmail = getUserEmail(user);
+        String userEmail = userService.getUserInfoById(user.getId()).getEmail();
 
         Comment comment = commentService.saveParentComment(postId, content, userEmail);
 
@@ -46,8 +47,8 @@ public class CommentController {
 
     @PostMapping("/{postId}/{parentId}")
     public String addReplyComment(@PathVariable Long postId, @PathVariable Long parentId,
-                                  String content, @AuthenticationPrincipal Object user){
-        String userEmail = getUserEmail(user);
+                                  String content, @AuthenticationPrincipal JwtUserDetails user){
+        String userEmail = userService.getUserInfoById(user.getId()).getEmail();
         commentService.saveChildComment(postId, parentId, content, userEmail);
 
         return "redirect:/post/" + postId;
@@ -59,16 +60,8 @@ public class CommentController {
     @ResponseBody
     public void deletePost(@PathVariable Long commentId, @AuthenticationPrincipal Object user,
                            @PathVariable Long postId){
+        System.out.println("delete controller");
         commentService.deleteComment(commentId);
-
-    }
-
-    private String getUserEmail(Object user){
-        if(user instanceof OAuth2User auth2User){
-            return auth2User.getName();
-        }else if(user instanceof LocalUserDetails localUser){
-            return localUser.getUsername();
-        }else throw new BadCredentialsException("사용자가 올바르지 않습니다");
     }
 
 }

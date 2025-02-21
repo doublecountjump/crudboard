@@ -51,8 +51,13 @@ public class CommentService {
         return commentRepository.existsCommentByIdAndUserEmail(commentId, name);
     }
 
+    public boolean isCommentOwnerByUserId(Long commentId, Long userId){
+        return commentRepository.existsCommentByIdAndUserId(commentId, userId);
+    }
+
     public void deleteComment(Long commentId) {
-        commentRepository.deleteById(commentId);
+        System.out.println("delete : " + commentId);
+        commentRepository.deleteCommentById(commentId);
         log.info("delete comment : {}" ,commentId);
     }
 }

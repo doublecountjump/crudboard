@@ -51,7 +51,7 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public String detailPost(@PathVariable Long id,@AuthenticationPrincipal JwtUserDetails user, Model model){
+    public String detailPost(@PathVariable Long id,@AuthenticationPrincipal Object user, Model model){
         Post post = postService.getPostById(id);
         String userEmail = getUserEmail(user);
         model.addAttribute("post", post);
@@ -67,10 +67,8 @@ public class PostController {
         postService.deletePost(id);
     }
     private String getUserEmail(Object user) {
-        if (user instanceof OAuth2User auth2User) {
-            return auth2User.getName();
-        } else if (user instanceof LocalUserDetails localUser) {
-            return localUser.getUsername();
+        if (user instanceof JwtUserDetails auth2User) {
+            return auth2User.getUsername();
         }
         else return null;
     }

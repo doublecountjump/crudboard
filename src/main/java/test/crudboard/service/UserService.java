@@ -52,6 +52,7 @@ public class UserService {
         return repository.existsUserByIdAndEmail(userId, email);
     }
 
+
     public UserInfoDto getUserInfo(String email){
         User user = repository.findUserByEmail(email).orElseThrow(() -> new EntityNotFoundException());
 
