@@ -28,10 +28,13 @@ public class UserService {
 
         if(repository.findUserByEmail(userJoinDto.getEmail()).isPresent()){
             throw new DuplicateRequestException("user already exist");
+        }else if(repository.findUserByNickname(userJoinDto.getNickname()).isPresent()){
+            throw new DuplicateRequestException("nickname exist");
         }
         User user = User.builder()
                 .email(userJoinDto.getEmail())
                 .password(encoder.encode(userJoinDto.getPassword()))
+                .nickname(userJoinDto.getNickname())
                 .provider(AuthProvider.LOCAL)
                 .roles(Roles.ROLE_USER)
                 .build();
@@ -43,6 +46,9 @@ public class UserService {
         return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("user not found"));
     }
 
+    public User findUserByNickname(String name){
+        return repository.findUserByNickname(name).orElseThrow(()->new EntityNotFoundException("user not found"));
+    }
     public User findUserByEmail(String email){
         return repository.findUserByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("user not found"));
@@ -53,11 +59,12 @@ public class UserService {
     }
 
 
-    public UserInfoDto getUserInfo(String email){
-        User user = repository.findUserByEmail(email).orElseThrow(() -> new EntityNotFoundException());
+    public UserInfoDto getUserInfo(String name){
+        User user = repository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException());
 
         return UserInfoDto.builder()
                 .id(user.getId())
+                .username(user.getNickname())
                 .email(user.getEmail())
                 .githubId(user.getGithubId())
                 .avatar_url(user.getProfileImage())
@@ -68,18 +75,4 @@ public class UserService {
                 .build();
     }
 
-    public UserInfoDto getUserInfoById(Long id){
-        User user = repository.findById(id).orElseThrow(() -> new EntityNotFoundException());
-
-        return UserInfoDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .githubId(user.getGithubId())
-                .avatar_url(user.getProfileImage())
-                .provider(user.getProvider())
-                .roles(user.getRoles())
-                .postList(user.getPostList())
-                .commentList(user.getCommentList())
-                .build();
-    }
 }

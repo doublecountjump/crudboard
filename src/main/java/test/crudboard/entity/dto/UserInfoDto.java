@@ -18,6 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 public class UserInfoDto {
     private Long id;
+    private String username;
     private String email;
     private String avatar_url;
     private String githubId;

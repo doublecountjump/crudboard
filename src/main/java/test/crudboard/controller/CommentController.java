@@ -38,7 +38,7 @@ public class CommentController {
                              @AuthenticationPrincipal JwtUserDetails user){
 
         log.info("context :{} ", content);
-        String userEmail = userService.getUserInfoById(user.getId()).getEmail();
+        String userEmail = userService.getUserInfo(user.getUsername()).getEmail();
 
         Comment comment = commentService.saveParentComment(postId, content, userEmail);
 
@@ -48,7 +48,7 @@ public class CommentController {
     @PostMapping("/{postId}/{parentId}")
     public String addReplyComment(@PathVariable Long postId, @PathVariable Long parentId,
                                   String content, @AuthenticationPrincipal JwtUserDetails user){
-        String userEmail = userService.getUserInfoById(user.getId()).getEmail();
+        String userEmail = userService.getUserInfo(user.getUsername()).getEmail();
         commentService.saveChildComment(postId, parentId, content, userEmail);
 
         return "redirect:/post/" + postId;

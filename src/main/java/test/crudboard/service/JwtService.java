@@ -42,7 +42,7 @@ public class JwtService {
         }
 
         Claims claims = Jwts.claims();
-        claims.put("id", user.getId());
+        claims.put("id", user.getNickname());
         claims.put("roles", user.getRoles().toString());
 
         return Jwts.builder()

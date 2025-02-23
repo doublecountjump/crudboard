@@ -38,7 +38,7 @@ public class PostController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create")
     public String createPage(@AuthenticationPrincipal JwtUserDetails user, Model model){
-        User authUser = userService.findUserById(user.getId());
+        User authUser = userService.findUserByNickname(user.getUsername());
         model.addAttribute("userId",authUser.getId());
         return "post";
     }
@@ -51,12 +51,23 @@ public class PostController {
     }
 
     @GetMapping("/{id}")
-    public String detailPost(@PathVariable Long id,@AuthenticationPrincipal Object user, Model model){
+    public String detailPost(@PathVariable Long id,@AuthenticationPrincipal JwtUserDetails user, Model model){
         Post post = postService.getPostById(id);
         String userEmail = getUserEmail(user);
         model.addAttribute("post", post);
-        model.addAttribute("currentUserEmail", userEmail);
+        model.addAttribute("currentUserEmail", user != null ? user.getUsername() : null);
+        model.addAttribute("currentUserId", user != null ? user.getUsername() : null);
         return "post-detail.html";
+    }
+
+
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("/{postId}")
+    public String recommendPost(@PathVariable Long postId, @AuthenticationPrincipal JwtUserDetails user){
+        System.out.println(postId);
+        postService.recommendPost(postId,user.getUsername());
+        System.out.println("hdfsadasfadsfasd");
+        return "redirect:/post/" + postId;
     }
 
 
@@ -66,6 +77,8 @@ public class PostController {
     public void deletePost(@PathVariable Long id){
         postService.deletePost(id);
     }
+
+
     private String getUserEmail(Object user) {
         if (user instanceof JwtUserDetails auth2User) {
             return auth2User.getUsername();

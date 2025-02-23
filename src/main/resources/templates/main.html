@@ -97,7 +97,7 @@
 
 <!-- 상단 환영 메시지 -->
 <h1 class="welcome-message">
-    <span th:if="${user}" th:text="${user.getEmail() + '님!'}"></span>
+    <span th:if="${user}" th:text="${user.getUsername() + '님!'}"></span>
     <span th:unless="${user}">익명의 사용자님!</span>
 </h1>
 

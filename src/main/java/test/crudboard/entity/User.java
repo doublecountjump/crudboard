@@ -23,6 +23,8 @@ public class User {
     @Column(name = "user_id")
     private Long id;
 
+
+    private String nickname;
     private String email;        // 구별
     private String password;     // 일반 로 그인용 (OAuth2 사용자는 null)
 

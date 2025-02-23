@@ -22,7 +22,6 @@ public class Token {
     private LocalDateTime expired;
     private String email;
 
-    private boolean isValid;  // 토큰 유효성 상태
 
     // 만료 체크 메서드
     public boolean isExpired() {

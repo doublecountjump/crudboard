@@ -4,6 +4,28 @@
     <meta charset="UTF-8">
     <title>게시글 상세</title>
     <style>
+        .like-section {
+            margin: 15px 0;
+        }
+        .like-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .like-btn:hover {
+            background-color: #f8f8f8;
+        }
+        .like-btn.liked {
+            background-color: #ffebee;
+            border-color: #ff4081;
+        }
+        .like-count {
+            margin-left: 5px;
+            font-weight: bold;
+        }
         .post-container, .comment-container {
             width: 80%;
             margin: 20px auto;
@@ -153,6 +175,16 @@
     </div>
     <div class="post-info">
         <span th:text="${'작성자: ' + post.user.email}">작성자</span>
+    </div>
+    <div class="like-section">
+        <form th:action="@{/post/{postId}(postId=${post.id})}" method="post" style="display: inline;">
+            <button type="submit" class="like-btn"
+                    th:classappend="${currentUserId != null && post.isLikedByUser(currentUserId)} ? 'liked' : ''">
+            <span class="like-icon"
+                  th:text="${currentUserId != null && post.isLikedByUser(currentUserId)} ? '❤️' : '🤍'"></span>
+                <span class="like-count" th:text="${post.likeCount}">0</span>
+            </button>
+        </form>
     </div>
     <div class="post-content" th:text="${post.context}">
         내용

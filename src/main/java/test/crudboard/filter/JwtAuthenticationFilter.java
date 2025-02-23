@@ -31,13 +31,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.info("filter start");
         String token = jwtService.extractToken(request);
-        System.out.println(token);
+        System.out.println(request.getRequestURI());
         try {
             if (token != null && jwtService.validToken(token)) {
                 Claims claims = jwtService.parseClaims(token);
 
                 JwtUserDetails userDetails = new JwtUserDetails(
-                        claims.get("id", Long.class),
+                        claims.get("id", String.class),
                         Roles.valueOf(claims.get("roles", String.class)));
 
                 Authentication authentication =

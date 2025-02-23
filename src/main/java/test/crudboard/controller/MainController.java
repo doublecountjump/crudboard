@@ -37,8 +37,8 @@ public class MainController {
     @GetMapping("/")
     public String home(@AuthenticationPrincipal JwtUserDetails userDetails, Model model){
         if(userDetails != null){
-            System.out.println("user id : " + userDetails.getId());
-            User user = userService.findUserById(userDetails.getId());
+            System.out.println("user id : " + userDetails.getUsername());
+            User user = userService.findUserByNickname(userDetails.getUsername());
 
             UserInfoDto userInfoDto = UserInfoDto.builder()
                     .id(user.getId())
@@ -81,7 +81,7 @@ public class MainController {
     @GetMapping("/mypage/{userId}")
     @CheckResourceOwner(type = ResourceType.USER)
     public String myPage(@PathVariable Long userId, @AuthenticationPrincipal JwtUserDetails user, Model model){
-        UserInfoDto userInfo = userService.getUserInfoById(user.getId());
+        UserInfoDto userInfo = userService.getUserInfo(user.getUsername());
 
         model.addAttribute("userInfo",userInfo);
         return "user-detail";

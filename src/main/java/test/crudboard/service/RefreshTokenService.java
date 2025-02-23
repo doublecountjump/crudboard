@@ -39,7 +39,7 @@ public class RefreshTokenService {
             return saveToken(email);
         }else {
             Token token = tokenByEmail.get();
-            if(token.isValid()){
+            if(!token.isExpired()){
                 return token;
             }else {
                  tokenRepository.delete(token);
@@ -81,7 +81,6 @@ public class RefreshTokenService {
         Token token = Token.builder()
                 .refresh(key)
                 .expired(LocalDateTime.now().plusMinutes(10))
-                .isValid(true)
                 .email(email)
                 .build();
         return tokenRepository.save(token);
