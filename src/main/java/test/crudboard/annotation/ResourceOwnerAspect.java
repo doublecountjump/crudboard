@@ -10,6 +10,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
+import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.provider.local.LocalUserDetails;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.service.CommentService;
@@ -37,6 +38,7 @@ public class ResourceOwnerAspect {
         };
 
         if (!hasPermission) {
+            System.out.println("not allowed");
             throw new AuthenticationCredentialsNotFoundException("권한이 없습니다");
         }
 
@@ -45,26 +47,20 @@ public class ResourceOwnerAspect {
     }
 
     private boolean checkPostOwner(Long resourceId, Object user) {
-        if(user instanceof OAuth2User oAuth2User){
-            return postService.isPostOwner(resourceId, oAuth2User.getName());
-        } else if (user instanceof LocalUserDetails userDetails) {
-            return postService.isPostOwner(resourceId, userDetails.getUsername());
+        if(user instanceof JwtUserDetails User){
+            return postService.isPostOwner(resourceId, User.getUsername());
         }else return false;
     }
 
     private boolean checkCommentOwner(Long resourceId, Object user) {
-        if(user instanceof OAuth2User oAuth2User){
-            return commentService.isCommentOwner(resourceId, oAuth2User.getName());
-        } else if (user instanceof LocalUserDetails userDetails) {
-            return commentService.isCommentOwner(resourceId, userDetails.getUsername());
+        if(user instanceof JwtUserDetails User){
+            return commentService.isCommentOwner(resourceId, User.getUsername());
         }else return false;
     }
 
     private boolean checkUser(Long resourceId, Object user){
-        if(user instanceof OAuth2User oAuth2User){
-            return userService.isIdentification(resourceId, oAuth2User.getName());
-        } else if (user instanceof LocalUserDetails userDetails) {
-            return userService.isIdentification(resourceId, userDetails.getUsername());
+        if(user instanceof JwtUserDetails User){
+            return userService.isIdentification(resourceId, User.getUsername());
         }else return false;
     }
 }

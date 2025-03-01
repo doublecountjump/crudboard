@@ -42,6 +42,7 @@ public class MainController {
 
             UserInfoDto userInfoDto = UserInfoDto.builder()
                     .id(user.getId())
+                    .username(user.getNickname())
                     .email(user.getEmail())
                     .avatar_url(user.getProfileImage())
                     .build();

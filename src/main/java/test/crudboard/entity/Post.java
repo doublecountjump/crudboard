@@ -24,7 +24,7 @@ public class Post {
 
     private String head;
     private String context;
-
+    private Long view;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;

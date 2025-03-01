@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface JpaPostRepository extends JpaRepository<Post, Long> {
 
-    @Query("select new test.crudboard.entity.dto.TitleDto(p.id, p.head, p.user.email) from Post p")
+    @Query("select new test.crudboard.entity.dto.TitleDto(p.id, p.head, p.user.email, p.view) from Post p")
     List<TitleDto> findPostList();
 
     @Query("select p from Post p left join fetch p.commentList c " +
@@ -19,6 +19,5 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     Optional<Post> findPostByUserId(@Param("id") Long id);
 
 
-    boolean existsPostByIdAndUserGithubId(Long postId, String githubId);
-    boolean existsPostByIdAndUserEmail(Long postId, String userEmail);
+    boolean existsPostByIdAndUserNickname(Long postId, String name);
 }

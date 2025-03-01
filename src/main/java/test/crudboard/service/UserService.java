@@ -54,8 +54,8 @@ public class UserService {
                 .orElseThrow(()-> new UsernameNotFoundException("user not found"));
     }
 
-    public boolean isIdentification(Long userId, String email) {
-        return repository.existsUserByIdAndEmail(userId, email);
+    public boolean isIdentification(Long userId, String name) {
+        return repository.existsUserByIdAndNickname(userId, name);
     }
 
 

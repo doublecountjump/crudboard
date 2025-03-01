@@ -16,6 +16,7 @@ import test.crudboard.annotation.CheckResourceOwner;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.User;
 import test.crudboard.entity.dto.PostDto;
+import test.crudboard.entity.dto.PostResponseDto;
 import test.crudboard.entity.enumtype.ResourceType;
 import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.provider.local.LocalUserDetails;
@@ -52,11 +53,10 @@ public class PostController {
 
     @GetMapping("/{id}")
     public String detailPost(@PathVariable Long id,@AuthenticationPrincipal JwtUserDetails user, Model model){
-        Post post = postService.getPostById(id);
-        String userEmail = getUserEmail(user);
-        model.addAttribute("post", post);
-        model.addAttribute("currentUserEmail", user != null ? user.getUsername() : null);
-        model.addAttribute("currentUserId", user != null ? user.getUsername() : null);
+        PostResponseDto dto = postService.getPostById(id);
+        model.addAttribute("post", dto.getPost());
+        model.addAttribute("view", dto.getView());
+        model.addAttribute("currentUserNickname", user != null ? user.getUsername() : null);
         return "post-detail.html";
     }
 
@@ -74,7 +74,7 @@ public class PostController {
     @DeleteMapping("/{id}")
     @CheckResourceOwner(type = ResourceType.POST)
     @ResponseBody
-    public void deletePost(@PathVariable Long id){
+    public void deletePost(@PathVariable Long id, @AuthenticationPrincipal JwtUserDetails user){
         postService.deletePost(id);
     }
 

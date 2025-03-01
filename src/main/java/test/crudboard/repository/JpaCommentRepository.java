@@ -7,9 +7,7 @@ import org.springframework.data.repository.query.Param;
 import test.crudboard.entity.Comment;
 
 public interface JpaCommentRepository extends JpaRepository<Comment, Long> {
-    boolean existsCommentByIdAndUserGithubId(Long postId, String githubId);
-    boolean existsCommentByIdAndUserEmail(Long postId, String userEmail);
-    boolean existsCommentByIdAndUserId(Long commentId, Long userId);
+    boolean existsCommentByIdAndUserNickname(Long postId, String name);
 
 
     @Modifying

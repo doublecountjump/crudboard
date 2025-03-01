@@ -43,16 +43,8 @@ public class CommentService {
         return commentRepository.save(child);
     }
 
-    public boolean isGithubCommentOwner(Long commentId, String name) {
-        return commentRepository.existsCommentByIdAndUserGithubId(commentId, name);
-    }
-
     public boolean isCommentOwner(Long commentId, String name){
-        return commentRepository.existsCommentByIdAndUserEmail(commentId, name);
-    }
-
-    public boolean isCommentOwnerByUserId(Long commentId, Long userId){
-        return commentRepository.existsCommentByIdAndUserId(commentId, userId);
+        return commentRepository.existsCommentByIdAndUserNickname(commentId, name);
     }
 
     public void deleteComment(Long commentId) {

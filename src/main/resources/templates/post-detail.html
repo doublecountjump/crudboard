@@ -36,6 +36,7 @@
         .post-title {
             font-size: 24px;
             margin-bottom: 10px;
+            margin-right: auto; /* 수정: 제목을 왼쪽에 배치하고 남은 공간을 오른쪽으로 밀어냄 */
         }
         .post-info {
             color: #666;
@@ -106,12 +107,18 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            margin-right: 10px;
+            margin-left: 10px;
+            float: right; /* 수정: 버튼을 오른쪽으로 배치 */
         }
         .post-header {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             margin-bottom: 20px;
+        }
+        .comment-content {
+            display: inline-block;
+            margin-right: 10px; /* 수정: 오른쪽 마진 추가 */
         }
     </style>
     <script>
@@ -168,18 +175,19 @@
 
 <div class="post-container">
     <div class="post-header">
-        <button th:if="${currentUserEmail == post.user.email}"
+        <h1 class="post-title" th:text="${post.head}">제목</h1>
+        <button th:if="${currentUserNickname == post.user.nickname}"
                 th:onclick="'deletePost(' + ${post.id} + ')'"
                 class="delete-btn">삭제</button>
-        <h1 class="post-title" th:text="${post.head}">제목</h1>
     </div>
     <div class="post-info">
-        <span th:text="${'작성자: ' + post.user.email}">작성자</span>
+        <span th:text="${'작성자: ' + post.user.nickname}">작성자</span>
+        <span style="margin-left: 15px;" th:text="${'조회수: ' + view}">조회수</span>
     </div>
     <div class="like-section">
         <form th:action="@{/post/{postId}(postId=${post.id})}" method="post" style="display: inline;">
             <button type="submit" class="like-btn"
-                    th:classappend="${currentUserId != null && post.isLikedByUser(currentUserId)} ? 'liked' : ''">
+                    th:classappend="${currentUserNickname != null && post.isLikedByUser(currentUserId)} ? 'liked' : ''">
             <span class="like-icon"
                   th:text="${currentUserId != null && post.isLikedByUser(currentUserId)} ? '❤️' : '🤍'"></span>
                 <span class="like-count" th:text="${post.likeCount}">0</span>
@@ -203,13 +211,13 @@
 
             <!-- 댓글 있는 경우 -->
             <div th:each="comment : ${post.commentList}" th:if="${comment.parent == null}" class="comment-item">
-                <div style="display: flex; align-items: center;">
-                    <button th:if="${currentUserEmail == comment.user.email}"
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div class="comment-content" th:text="${comment.content}">댓글 내용</div>
+                    <button th:if="${currentUserNickname == comment.user.nickname}"
                             th:onclick="'deleteComment(' + ${post.id} + ',' + ${comment.id} + ')'"
                             class="delete-btn">삭제</button>
-                    <div th:text="${comment.content}">댓글 내용</div>
                 </div>
-                <div class="post-info" th:text="${'작성자: ' + comment.user.email}">댓글 작성자</div>
+                <div class="post-info" th:text="${'작성자: ' + comment.user.nickname}">댓글 작성자</div>
 
                 <!-- 답글 달기 버튼 -->
                 <div class="reply-toggle" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'">
@@ -226,13 +234,13 @@
 
                 <!-- 대댓글 -->
                 <div th:each="reply : ${comment.child}" class="nested-comment">
-                    <div style="display: flex; align-items: center;">
-                        <button th:if="${currentUserEmail == reply.user.email}"
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div class="comment-content" th:text="${reply.content}">대댓글 내용</div>
+                        <button th:if="${currentUserNickname == reply.user.nickname}"
                                 th:onclick="'deleteComment(' + ${post.id} + ',' + ${reply.id} + ')'"
                                 class="delete-btn">삭제</button>
-                        <div th:text="${reply.content}">대댓글 내용</div>
                     </div>
-                    <div class="post-info" th:text="${'작성자: ' + reply.user.email}">대댓글 작성자</div>
+                    <div class="post-info" th:text="${'작성자: ' + reply.user.nickname}">대댓글 작성자</div>
                 </div>
             </div>
         </div>
