@@ -36,7 +36,6 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         log.info("Handler Start");
 
         String email = null;
-
         if (authentication.getPrincipal() instanceof OAuth2User) {
             OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
             email = oauth2User.getAttribute("email");
@@ -51,7 +50,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         refreshTokenService.GenerateToken(email);
         Cookie cookie = new Cookie("jwt", token);
         cookie.setSecure(true);
-        cookie.setMaxAge(3600); // 1시간
+        cookie.setMaxAge(10); // 1시간
         cookie.setPath("/");
         response.addCookie(cookie);
 

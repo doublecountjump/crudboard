@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .loginPage("/login")
                         .successHandler(loginSuccessHandler)
                 )
+                .logout(l -> l.logoutSuccessUrl("/"))
                 .csrf(csrf -> csrf.disable())
                 .userDetailsService(localUserDetailsService)
                 .authenticationProvider(provider);
