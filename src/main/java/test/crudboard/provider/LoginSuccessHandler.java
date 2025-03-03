@@ -50,7 +50,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         refreshTokenService.GenerateToken(email);
         Cookie cookie = new Cookie("jwt", token);
         cookie.setSecure(true);
-        cookie.setMaxAge(10); // 1시간
+        cookie.setMaxAge(100); // 1시간
         cookie.setPath("/");
         response.addCookie(cookie);
 

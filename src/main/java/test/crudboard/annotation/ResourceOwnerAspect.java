@@ -3,6 +3,7 @@ package test.crudboard.annotation;
 
 import com.sun.jdi.request.DuplicateRequestException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -17,9 +18,15 @@ import test.crudboard.service.CommentService;
 import test.crudboard.service.PostService;
 import test.crudboard.service.UserService;
 
+
+/**
+ * AOP 기능 하나 더 추가해서 써먹어보기
+ * EX - 로그인한 사용자들의 로그 추적?
+ */
 @Aspect
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class ResourceOwnerAspect {
     private final PostService postService;
     private final CommentService commentService;
@@ -34,11 +41,11 @@ public class ResourceOwnerAspect {
         boolean hasPermission = switch (checkResourceOwner.type()){
             case POST -> checkPostOwner(resourceId, user);
             case COMMENT -> checkCommentOwner(resourceId, user);
-            case USER -> checkUser(resourceId, user);
+            //case USER -> checkUser(resourceId, user);
         };
 
         if (!hasPermission) {
-            System.out.println("not allowed");
+            log.warn("not allowed");
             throw new AuthenticationCredentialsNotFoundException("권한이 없습니다");
         }
 
@@ -58,6 +65,8 @@ public class ResourceOwnerAspect {
         }else return false;
     }
 
+    //필요한가?
+    @Deprecated
     private boolean checkUser(Long resourceId, Object user){
         if(user instanceof JwtUserDetails User){
             return userService.isIdentification(resourceId, User.getUsername());

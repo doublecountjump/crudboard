@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class PostDto {
     @NotBlank
-    private Long userid;
+    private String name;
     @NotBlank
     private String head;
     private String context;

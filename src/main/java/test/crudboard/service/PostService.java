@@ -32,17 +32,24 @@ public class PostService{
     private static final String VIEW_COUNT_PREFIX = "view:content:";
 
     public Post save(PostDto postDto){
-        User user = userRepository.findById(postDto.getUserid())
+        System.out.println(postDto.getName());
+        User user = userRepository.findUserByNickname(postDto.getName())
                 .orElseThrow(() -> new EntityNotFoundException("entity not found"));
 
         Post post = Post.builder()
                 .head(postDto.getHead())
                 .context(postDto.getContext())
+                .view(0L)
                 .build();
         post.setUser(user);
 
         return postRepository.save(post);
     }
+
+    public Post findById(Long postId){
+        return postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("not found!!"));
+    }
+
     public List<TitleDto> getTitleList(){
         List<TitleDto> postList = postRepository.findPostList();
 
@@ -59,7 +66,7 @@ public class PostService{
         return postList;
     }
 
-    public PostResponseDto getPostById(Long id){
+    public PostResponseDto getPostResponseDtoById(Long id){
         String key = VIEW_COUNT_PREFIX + id;
         Post post = postRepository.findPostByUserId(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
 

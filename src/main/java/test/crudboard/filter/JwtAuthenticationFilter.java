@@ -22,6 +22,10 @@ import test.crudboard.service.JwtService;
 import java.io.IOException;
 import java.util.Arrays;
 
+/**
+ * session 방식과 비교했을때 jwt 방식의 장점은?
+ */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
