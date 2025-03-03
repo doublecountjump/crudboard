@@ -24,7 +24,7 @@ public class Post {
 
     private String head;
     private String context;
-
+    private Long view;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
     private User user;
@@ -34,6 +34,18 @@ public class Post {
     @BatchSize(size = 10)
     private List<Comment> commentList = new ArrayList<>();
 
+    @OneToMany(mappedBy = "post")
+    private List<Like> likeList = new ArrayList<>();
+
+    public int getLikeCount() {
+        return likeList.size();
+    }
+
+    public boolean isLikedByUser(String name) {
+        if(name == null) return false;
+        return likeList.stream()
+                .anyMatch(like -> like.getUser().getNickname().equals(name));
+    }
 
     public void setUser(User user){
         this.user = user;

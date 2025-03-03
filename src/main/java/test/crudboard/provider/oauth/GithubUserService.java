@@ -73,9 +73,8 @@ public class GithubUserService extends DefaultOAuth2UserService {
     private User setUserInfo(OAuth2User oAuth2User, OAuth2UserRequest userRequest, String email){
         Integer id = oAuth2User.getAttribute("id");          // GitHub ID
         String login = oAuth2User.getAttribute("login");    // GitHub 계정명
-        String name = oAuth2User.getAttribute("name");      // 실제 이름
+        String name = oAuth2User.getAttribute("login");      // 실제 이름
         String avatar = oAuth2User.getAttribute("avatar_url"); // 프로필 이미지
-
         log.info("id : {} ", id);
         log.info("login : {} ", login);
         log.info("name : {} ", name);
@@ -84,6 +83,7 @@ public class GithubUserService extends DefaultOAuth2UserService {
 
         User user = new User();
         user.setEmail(email);
+        user.setNickname(name);
         user.setPassword(null);
         user.setGithubId(id.toString());
         user.setProfileImage(avatar);

@@ -97,7 +97,7 @@
 
 <!-- 상단 환영 메시지 -->
 <h1 class="welcome-message">
-    <span th:if="${user}" th:text="${user.getEmail() + '님!'}"></span>
+    <span th:if="${user}" th:text="${user.getUsername() + '님!'}"></span>
     <span th:unless="${user}">익명의 사용자님!</span>
 </h1>
 
@@ -117,6 +117,7 @@
         </a>
         <div class="post-info">
             <span th:text="${'작성자: ' + title.email}">작성자 이메일</span>
+            <span style="margin-left: 15px;" th:text="${'조회수: ' + title.view}">조회수</span>
         </div>
     </div>
 </div>

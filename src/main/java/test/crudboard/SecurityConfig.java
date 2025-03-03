@@ -9,6 +9,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import test.crudboard.filter.JwtAuthenticationFilter;
+import test.crudboard.provider.LoginSuccessHandler;
 import test.crudboard.provider.local.LocalUserDetailsService;
 import test.crudboard.provider.local.LocalUserProvider;
 
@@ -19,19 +22,21 @@ import test.crudboard.provider.local.LocalUserProvider;
 public class SecurityConfig {
     private final LocalUserDetailsService localUserDetailsService;
     private final LocalUserProvider provider;
-
+    private final LoginSuccessHandler loginSuccessHandler;
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                         .anyRequest().permitAll()
                 )
                 .formLogin(form -> form  // 폼 로그인 설정
                         .loginPage("/login")
-                        .permitAll()
+                        .successHandler(loginSuccessHandler)
                 )
                 .oauth2Login(oauth2 -> oauth2  // OAuth2 로그인 설정
                         .loginPage("/login")
+                        .successHandler(loginSuccessHandler)
                 )
                 .csrf(csrf -> csrf.disable())
                 .userDetailsService(localUserDetailsService)

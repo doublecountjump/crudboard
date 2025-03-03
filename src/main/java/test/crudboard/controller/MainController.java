@@ -19,6 +19,7 @@ import test.crudboard.entity.dto.TitleDto;
 import test.crudboard.entity.dto.UserInfoDto;
 import test.crudboard.entity.dto.UserJoinDto;
 import test.crudboard.entity.enumtype.ResourceType;
+import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.provider.local.LocalUserDetails;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.service.PostService;
@@ -34,14 +35,14 @@ public class MainController {
     private final PostService postService;
 
     @GetMapping("/")
-    public String home(@AuthenticationPrincipal Object authentication, Model model){
-        String userEmail = getUserEmail(authentication);
-        if(userEmail != null){
-            log.info("UserEmail: {}", userEmail);
-            User user = userService.findUserByEmail(userEmail);
+    public String home(@AuthenticationPrincipal JwtUserDetails userDetails, Model model){
+        if(userDetails != null){
+            System.out.println("user id : " + userDetails.getUsername());
+            User user = userService.findUserByNickname(userDetails.getUsername());
 
             UserInfoDto userInfoDto = UserInfoDto.builder()
                     .id(user.getId())
+                    .username(user.getNickname())
                     .email(user.getEmail())
                     .avatar_url(user.getProfileImage())
                     .build();
@@ -80,18 +81,10 @@ public class MainController {
 
     @GetMapping("/mypage/{userId}")
     @CheckResourceOwner(type = ResourceType.USER)
-    public String myPage(@PathVariable Long userId, @AuthenticationPrincipal Object user, Model model){
-        UserInfoDto userInfo = userService.getUserInfo(getUserEmail(user));
+    public String myPage(@PathVariable Long userId, @AuthenticationPrincipal JwtUserDetails user, Model model){
+        UserInfoDto userInfo = userService.getUserInfo(user.getUsername());
 
         model.addAttribute("userInfo",userInfo);
         return "user-detail";
-    }
-    private String getUserEmail(Object user) {
-        if (user instanceof OAuth2User auth2User) {
-            return auth2User.getName();
-        } else if (user instanceof LocalUserDetails localUser) {
-            return localUser.getUsername();
-        }
-        else return null;
     }
 }

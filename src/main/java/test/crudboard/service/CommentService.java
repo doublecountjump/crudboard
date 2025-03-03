@@ -43,16 +43,13 @@ public class CommentService {
         return commentRepository.save(child);
     }
 
-    public boolean isGithubCommentOwner(Long commentId, String name) {
-        return commentRepository.existsCommentByIdAndUserGithubId(commentId, name);
-    }
-
     public boolean isCommentOwner(Long commentId, String name){
-        return commentRepository.existsCommentByIdAndUserEmail(commentId, name);
+        return commentRepository.existsCommentByIdAndUserNickname(commentId, name);
     }
 
     public void deleteComment(Long commentId) {
-        commentRepository.deleteById(commentId);
+        System.out.println("delete : " + commentId);
+        commentRepository.deleteCommentById(commentId);
         log.info("delete comment : {}" ,commentId);
     }
 }
