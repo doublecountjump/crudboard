@@ -22,6 +22,10 @@ import test.crudboard.service.JwtService;
 import java.io.IOException;
 import java.util.Arrays;
 
+/**
+ * session 방식과 비교했을때 jwt 방식의 장점은?
+ */
+
 @Component
 @RequiredArgsConstructor
 @Slf4j
@@ -30,10 +34,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         log.info("filter start");
-        String token = jwtService.extractToken(request);
         System.out.println(request.getRequestURI());
+
+        String token = jwtService.extractToken(request);
+        if(token == null){
+            System.out.println("nul!!!!!!!!!!!!!!!");
+            SecurityContextHolder.clearContext();
+            filterChain.doFilter(request,response);
+            return;
+        }
         try {
-            if (token != null && jwtService.validToken(token)) {
+            if (jwtService.validToken(token)) {
                 Claims claims = jwtService.parseClaims(token);
 
                 JwtUserDetails userDetails = new JwtUserDetails(
@@ -47,9 +58,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 log.info("Context in");
             }
-            filterChain.doFilter(request,response);
         }catch (ExpiredJwtException e){
-            log.info("JWT token is expired. Removing cookie...");
+            log.warn("JWT token is expired. Removing cookie...");
 
             // 쿠키 삭제
             Cookie cookie = new Cookie("jwt", null);
@@ -59,9 +69,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Security Context 초기화
             SecurityContextHolder.clearContext();
-
-            response.sendRedirect("/logout");
-            return;
+        }finally {
+            filterChain.doFilter(request,response);
         }
 
     }

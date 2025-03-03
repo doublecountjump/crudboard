@@ -28,8 +28,6 @@ import java.util.Map;
 @RequestMapping("/comment")
 @PreAuthorize("isAuthenticated()")
 public class CommentController {
-    private final UserService userService;
-    private final PostService postService;
     private final CommentService commentService;
 
 
@@ -37,10 +35,7 @@ public class CommentController {
     public String addComment(@PathVariable Long postId, String content,
                              @AuthenticationPrincipal JwtUserDetails user){
 
-        log.info("context :{} ", content);
-        String userEmail = userService.getUserInfo(user.getUsername()).getEmail();
-
-        Comment comment = commentService.saveParentComment(postId, content, userEmail);
+        commentService.saveParentComment(postId, content, user.getUsername());
 
         return "redirect:/post/" + postId;
     }
@@ -48,8 +43,7 @@ public class CommentController {
     @PostMapping("/{postId}/{parentId}")
     public String addReplyComment(@PathVariable Long postId, @PathVariable Long parentId,
                                   String content, @AuthenticationPrincipal JwtUserDetails user){
-        String userEmail = userService.getUserInfo(user.getUsername()).getEmail();
-        commentService.saveChildComment(postId, parentId, content, userEmail);
+        commentService.saveChildComment(postId, parentId, content, user.getUsername());
 
         return "redirect:/post/" + postId;
     }

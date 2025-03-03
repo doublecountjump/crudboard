@@ -3,6 +3,7 @@ package test.crudboard.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,16 +39,7 @@ public class MainController {
     public String home(@AuthenticationPrincipal JwtUserDetails userDetails, Model model){
         if(userDetails != null){
             System.out.println("user id : " + userDetails.getUsername());
-            User user = userService.findUserByNickname(userDetails.getUsername());
-
-            UserInfoDto userInfoDto = UserInfoDto.builder()
-                    .id(user.getId())
-                    .username(user.getNickname())
-                    .email(user.getEmail())
-                    .avatar_url(user.getProfileImage())
-                    .build();
-
-            model.addAttribute("user", userInfoDto);
+            model.addAttribute("username", userDetails.getUsername());
         }else {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();
             log.info("Current Authentication: {}", auth);
@@ -80,8 +72,8 @@ public class MainController {
 
 
     @GetMapping("/mypage/{userId}")
-    @CheckResourceOwner(type = ResourceType.USER)
-    public String myPage(@PathVariable Long userId, @AuthenticationPrincipal JwtUserDetails user, Model model){
+    @PreAuthorize("isAuthenticated()")
+    public String myPage(@AuthenticationPrincipal JwtUserDetails user, Model model){
         UserInfoDto userInfo = userService.getUserInfo(user.getUsername());
 
         model.addAttribute("userInfo",userInfo);

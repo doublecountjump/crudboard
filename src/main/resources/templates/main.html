@@ -83,22 +83,21 @@
 <!-- 버튼 컨테이너 -->
 <div class="button-container">
     <!-- 로그인한 경우 -->
-    <th:block th:if="${user}">
+    <th:block th:if="${username}">
         <a th:href="@{/post/create}" class="btn btn-primary">게시글 작성</a>
-        <a th:href="@{/mypage/{id}(id=${user.id})}" class="btn btn-primary">마이페이지</a>
+        <a th:href="@{/mypage/{id}(id=${username})}" class="btn btn-primary">마이페이지</a>
         <a href="/logout" class="btn btn-secondary">로그아웃</a>
     </th:block>
     <!-- 로그인하지 않은 경우 -->
-    <th:block th:unless="${user}">
-        <a th:href="@{/post/create}" class="btn btn-primary">게시글 작성</a>
+    <th:block th:unless="${username}">
         <a th:href="@{/login}" class="btn btn-secondary">로그인</a>
     </th:block>
 </div>
 
 <!-- 상단 환영 메시지 -->
 <h1 class="welcome-message">
-    <span th:if="${user}" th:text="${user.getUsername() + '님!'}"></span>
-    <span th:unless="${user}">익명의 사용자님!</span>
+    <span th:if="${username}" th:text="${username + '님!'}"></span>
+    <span th:unless="${username}">익명의 사용자님!</span>
 </h1>
 
 <!-- 게시글 목록 -->
