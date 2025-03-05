@@ -52,9 +52,10 @@ public class PostController {
 
 
     @PreAuthorize("isAuthenticated()")
-    @PostMapping("/{postId}")
+    @PostMapping("/recommend/{postId}")
     public String recommendPost(@PathVariable Long postId, @AuthenticationPrincipal JwtUserDetails user){
         postService.recommendPost(postId,user.getUsername());
+
         return "redirect:/post/" + postId;
     }
 
