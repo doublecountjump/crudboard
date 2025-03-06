@@ -1,5 +1,6 @@
 package test.crudboard;
 
+import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,7 +39,14 @@ public class SecurityConfig {
                         .loginPage("/login")
                         .successHandler(loginSuccessHandler)
                 )
-                .logout(l -> l.logoutSuccessUrl("/"))
+                .logout(l -> l.addLogoutHandler((request, response, authentication) ->{
+                    Cookie cookie = new Cookie("jwt", null);
+                    cookie.setMaxAge(0);
+                    cookie.setPath("/");
+                    response.addCookie(cookie);
+                })
+                        .logoutSuccessUrl("/"))
+
                 .csrf(csrf -> csrf.disable())
                 .userDetailsService(localUserDetailsService)
                 .authenticationProvider(provider);

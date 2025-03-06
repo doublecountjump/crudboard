@@ -185,7 +185,7 @@
         <span style="margin-left: 15px;" th:text="${'조회수: ' + view}">조회수</span>
     </div>
     <div class="like-section">
-        <form th:action="@{/post/{postId}(postId=${post.id})}" method="post" style="display: inline;">
+        <form th:action="@{/post/recommend/{postId}(postId=${post.id})}" method="post" style="display: inline;">
             <button type="submit" class="like-btn"
                     th:classappend="${currentUserNickname != null && post.isLikedByUser(currentUserId)} ? 'liked' : ''">
             <span class="like-icon"

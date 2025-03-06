@@ -5,6 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.*;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import test.crudboard.entity.Like;
@@ -16,6 +17,8 @@ import test.crudboard.entity.dto.TitleDto;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.repository.LikeRepository;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.List;
 import java.util.Objects;
@@ -50,8 +53,9 @@ public class PostService{
         return postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("not found!!"));
     }
 
-    public List<TitleDto> getTitleList(){
-        List<TitleDto> postList = postRepository.findPostList();
+    public Page<TitleDto> getTitleList(Integer page){
+        PageRequest created = PageRequest.of(page - 1, 5, Sort.by("created").descending());
+        Page<TitleDto> postList = postRepository.findPostList(created);
 
         for (TitleDto titleDto : postList) {
             String key = VIEW_COUNT_PREFIX + titleDto.getId();
@@ -59,10 +63,11 @@ public class PostService{
 
             if(view!=null){
                 titleDto.setView(Long.parseLong(view));
+            }else{
+                titleDto.setView(0L);
             }
         }
-
-
+        
         return postList;
     }
 
@@ -91,9 +96,8 @@ public class PostService{
 
     public void recommendPost(Long postId, String name) {
         boolean b = likeRepository.existsLikeByPostIdAndUserNickname(postId, name);
-
         if(b){
-            likeRepository.deleteLikeByPostIdAndUserNickname(postId,name);
+            likeRepository.deleteLikeByPostIdAndUserNickname(postId, name);
         }else{
 
             Like like = Like.builder()
@@ -104,4 +108,5 @@ public class PostService{
             likeRepository.save(like);
         }
     }
+
 }

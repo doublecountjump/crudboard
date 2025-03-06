@@ -4,6 +4,41 @@
     <meta charset="UTF-8">
     <title>메인 페이지</title>
     <style>
+        .pagination-container {
+            width: 80%;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .pagination {
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .page-link {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 0 4px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .page-link:hover {
+            background-color: #f8f9fa;
+        }
+
+        .current-page {
+            display: inline-block;
+            padding: 8px 12px;
+            margin: 0 4px;
+            border: 1px solid #007bff;
+            border-radius: 4px;
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
         .welcome-message {
             text-align: center;
             margin: 20px 0;
@@ -105,12 +140,12 @@
     <h2>게시글 목록</h2>
 
     <!-- 게시글이 없을 경우 -->
-    <div th:if="${titleList.empty}" class="no-posts">
+    <div th:if="${titleList.getContent().isEmpty()}" class="no-posts">
         등록된 게시글이 없습니다.
     </div>
 
     <!-- 게시글 목록 표시 -->
-    <div th:each="title : ${titleList}" class="post-item">
+    <div th:each="title : ${titleList.getContent()}" class="post-item">
         <a th:href="@{/post/{id}(id=${title.id})}" class="post-title">
             <span th:text="${title.head}">게시글 제목</span>
         </a>
@@ -118,6 +153,21 @@
             <span th:text="${'작성자: ' + title.email}">작성자 이메일</span>
             <span style="margin-left: 15px;" th:text="${'조회수: ' + title.view}">조회수</span>
         </div>
+    </div>
+</div>
+<div class="pagination-container">
+    <div class="pagination" th:if="${!titleList.isEmpty()}">
+        <!-- 이전 페이지 -->
+        <a th:if="${titleList.hasPrevious()}" th:href="@{/{page}(page=${titleList.getNumber()})}" class="page-link">&laquo; 이전</a>
+
+        <!-- 페이지 번호 -->
+        <span th:each="i : ${#numbers.sequence(1, titleList.getTotalPages())}">
+            <a th:if="${i != titleList.getNumber() + 1}" th:href="@{/{page}(page=${i})}" class="page-link" th:text="${i}"></a>
+            <span th:if="${i == titleList.getNumber() + 1}" class="current-page" th:text="${i}"></span>
+        </span>
+
+        <!-- 다음 페이지 -->
+        <a th:if="${titleList.hasNext()}" th:href="@{/{page}(page=${titleList.getNumber() + 2})}" class="page-link">다음 &raquo;</a>
     </div>
 </div>
 </body>

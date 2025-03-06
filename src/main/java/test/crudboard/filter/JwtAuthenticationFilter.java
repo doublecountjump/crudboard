@@ -15,6 +15,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 import test.crudboard.entity.enumtype.Roles;
 import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.service.JwtService;
@@ -33,12 +34,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("filter start");
-        System.out.println(request.getRequestURI());
-
         String token = jwtService.extractToken(request);
         if(token == null){
-            System.out.println("nul!!!!!!!!!!!!!!!");
             SecurityContextHolder.clearContext();
             filterChain.doFilter(request,response);
             return;
@@ -54,9 +51,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Authentication authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.info("Context in");
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }catch (ExpiredJwtException e){
             log.warn("JWT token is expired. Removing cookie...");
