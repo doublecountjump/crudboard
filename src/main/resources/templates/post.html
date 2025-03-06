@@ -22,10 +22,10 @@
 <h2>게시글 작성</h2>
 <form th:action="@{/post/create}" method="post">
     <div class="form-group">
-        <label for="userid">작성자 ID</label>
+        <label for="name">작성자</label>
         <!-- userId를 hidden input으로도 전송하면서, 보여주기용 readonly input도 사용 -->
-        <input type="hidden" id="userid" name="userid" th:value="${userId}">
-        <input type="text" th:value="${userId}" readonly class="form-control">
+        <input type="hidden" id="name" name="name" th:value="${name}">
+        <input type="text" th:value="${name}" readonly class="form-control">
     </div>
 
     <div class="form-group">

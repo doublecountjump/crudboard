@@ -11,6 +11,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.WebUtils;
@@ -30,6 +31,7 @@ import java.util.Date;
 @Transactional
 public class JwtService {
     private final UserService userService;
+    private final OAuth2ClientProperties oAuth2ClientProperties;
 
     @Value("${jwt.secret}")
     private String secretKey;
@@ -71,6 +73,9 @@ public class JwtService {
 
     public String extractToken(HttpServletRequest request){
         Cookie jwtCookie = WebUtils.getCookie(request, "jwt");
+        if(jwtCookie == null){
+            System.out.println("cookie is null!!");
+        }
         return jwtCookie != null ? jwtCookie.getValue() : null;
 
     }

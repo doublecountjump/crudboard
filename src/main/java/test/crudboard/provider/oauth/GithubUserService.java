@@ -1,13 +1,11 @@
 package test.crudboard.provider.oauth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -20,6 +18,8 @@ import test.crudboard.entity.enumtype.AuthProvider;
 import test.crudboard.entity.enumtype.Roles;
 import test.crudboard.repository.JpaUserRepository;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +50,11 @@ public class GithubUserService extends DefaultOAuth2UserService {
 
         String email = (String) oAuth2User.getAttribute("email");
         if(email == null){
-            email = getEmailFromGithubApi(userRequest.getAccessToken().getTokenValue());
+            try {
+                email = getEmailFromGithubApi(userRequest.getAccessToken().getTokenValue());
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
         }
 
 
@@ -103,22 +107,39 @@ public class GithubUserService extends DefaultOAuth2UserService {
         return user;
     }
 
-    private String getEmailFromGithubApi(String accessToken) {
-        RestTemplate restTemplate = new RestTemplate();
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
+    private String getEmailFromGithubApi(String accessToken) throws URISyntaxException {
+        RestTemplate restTemplate = new RestTemplate();//동기식 요청 + 블로킹 요청
+        
+        URI uri = new URI("https://api.github.com/user/emails");
 
-        ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                "https://api.github.com/user/emails",
-                HttpMethod.GET,
-                new HttpEntity<>(headers),
-                new ParameterizedTypeReference<List<Map<String, Object>>>() {}
+        RequestEntity<Void> requestEntity = RequestEntity
+                .get(uri)
+                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken)
+                .build();
+
+        ResponseEntity<List> response = restTemplate.exchange(          //header 도 같이 보내야 하기에 exchange 사용
+               requestEntity, List.class
         );
 
-        return response.getBody().stream()
+        show_JSON(response);
+
+        //@SuppressWarnings("unchecked")
+        List<Map<String, Object>> emails = (List<Map<String, Object>>) response.getBody();
+
+        return emails.stream()
                 .filter(email -> (Boolean) email.get("primary"))
                 .map(email -> (String) email.get("email"))
                 .findFirst()
                 .orElse(null);
+    }
+
+    private void show_JSON(ResponseEntity<List> response) {
+        ObjectMapper mapper = new ObjectMapper();
+        try{
+            String s = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response.getBody());
+            System.out.println("응답요청!!");
+            System.out.println(s);
+        } catch (JsonProcessingException e) {
+        }
     }
 }

@@ -1,5 +1,5 @@
 package test.crudboard.entity.enumtype;
 
 public enum ResourceType {
-    POST, COMMENT, USER
+    POST, COMMENT
 }

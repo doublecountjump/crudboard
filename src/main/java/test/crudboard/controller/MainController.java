@@ -3,29 +3,23 @@ package test.crudboard.controller;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import test.crudboard.annotation.CheckResourceOwner;
-import test.crudboard.entity.User;
 import test.crudboard.entity.dto.TitleDto;
 import test.crudboard.entity.dto.UserInfoDto;
 import test.crudboard.entity.dto.UserJoinDto;
-import test.crudboard.entity.enumtype.ResourceType;
 import test.crudboard.provider.JwtUserDetails;
-import test.crudboard.provider.local.LocalUserDetails;
-import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.service.PostService;
 import test.crudboard.service.UserService;
 
-import java.util.List;
 
 @Controller
 @Slf4j
@@ -34,30 +28,21 @@ public class MainController {
     private final UserService userService;
     private final PostService postService;
 
-    @GetMapping("/")
-    public String home(@AuthenticationPrincipal JwtUserDetails userDetails, Model model){
+    @GetMapping(value = {"","/","/{page}"})
+    public String home(@AuthenticationPrincipal JwtUserDetails userDetails, Model model,
+                       @PathVariable(required = false) Integer page){
+        if(page == null){
+            page = 1;
+        }
+
         if(userDetails != null){
             System.out.println("user id : " + userDetails.getUsername());
-            User user = userService.findUserByNickname(userDetails.getUsername());
-
-            UserInfoDto userInfoDto = UserInfoDto.builder()
-                    .id(user.getId())
-                    .username(user.getNickname())
-                    .email(user.getEmail())
-                    .avatar_url(user.getProfileImage())
-                    .build();
-
-            model.addAttribute("user", userInfoDto);
-        }else {
-            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-            log.info("Current Authentication: {}", auth);
-            if(auth != null) {
-                log.info("Authentication Principal type: {}", auth.getPrincipal().getClass().getName());
-            }
+            model.addAttribute("username", userDetails.getUsername());
         }
-        List<TitleDto> titleList = postService.getTitleList();
 
+        Page<TitleDto> titleList = postService.getTitleList(page);
         model.addAttribute("titleList",titleList);
+
         return "main";
     }
 
@@ -80,8 +65,8 @@ public class MainController {
 
 
     @GetMapping("/mypage/{userId}")
-    @CheckResourceOwner(type = ResourceType.USER)
-    public String myPage(@PathVariable Long userId, @AuthenticationPrincipal JwtUserDetails user, Model model){
+    @PreAuthorize("isAuthenticated()")
+    public String myPage(@AuthenticationPrincipal JwtUserDetails user, Model model){
         UserInfoDto userInfo = userService.getUserInfo(user.getUsername());
 
         model.addAttribute("userInfo",userInfo);

@@ -15,12 +15,17 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.WebUtils;
 import test.crudboard.entity.enumtype.Roles;
 import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.service.JwtService;
 
 import java.io.IOException;
 import java.util.Arrays;
+
+/**
+ * session 방식과 비교했을때 jwt 방식의 장점은?
+ */
 
 @Component
 @RequiredArgsConstructor
@@ -29,11 +34,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        log.info("filter start");
         String token = jwtService.extractToken(request);
-        System.out.println(request.getRequestURI());
+        if(token == null){
+            SecurityContextHolder.clearContext();
+            filterChain.doFilter(request,response);
+            return;
+        }
         try {
-            if (token != null && jwtService.validToken(token)) {
+            if (jwtService.validToken(token)) {
                 Claims claims = jwtService.parseClaims(token);
 
                 JwtUserDetails userDetails = new JwtUserDetails(
@@ -43,13 +51,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Authentication authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                log.info("Context in");
+                SecurityContextHolder.getContext().setAuthentication(authentication);
             }
-            filterChain.doFilter(request,response);
         }catch (ExpiredJwtException e){
-            log.info("JWT token is expired. Removing cookie...");
+            log.warn("JWT token is expired. Removing cookie...");
 
             // 쿠키 삭제
             Cookie cookie = new Cookie("jwt", null);
@@ -59,9 +65,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             // Security Context 초기화
             SecurityContextHolder.clearContext();
-
-            response.sendRedirect("/logout");
-            return;
+        }finally {
+            filterChain.doFilter(request,response);
         }
 
     }
