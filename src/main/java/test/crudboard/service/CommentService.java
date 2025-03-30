@@ -45,7 +45,6 @@ public class CommentService {
     }
 
     public void deleteComment(Long commentId) {
-        System.out.println("delete : " + commentId);
         commentRepository.deleteCommentById(commentId);
         log.info("delete comment : {}" ,commentId);
     }

@@ -1,4 +1,4 @@
-package test.crudboard.annotation;
+package test.crudboard.aop.annotation;
 
 
 import test.crudboard.entity.enumtype.ResourceType;

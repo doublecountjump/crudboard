@@ -38,17 +38,9 @@ public class GithubUserService extends DefaultOAuth2UserService {
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
 
-        log.info("Access Token : "+ userRequest.getAccessToken());
-        log.info("Provider : "+ userRequest.getClientRegistration().getRegistrationId());
         OAuth2User oAuth2User = super.loadUser(userRequest);
 
-        log.info("=== OAuth2User Attributes ===");
-        oAuth2User.getAttributes().forEach((key, value) -> {
-            log.info("{} : {}", key, value);
-        });
-        log.info("==========================");
-
-        String email = (String) oAuth2User.getAttribute("email");
+        String email = oAuth2User.getAttribute("email");
         if(email == null){
             try {
                 email = getEmailFromGithubApi(userRequest.getAccessToken().getTokenValue());
@@ -99,7 +91,7 @@ public class GithubUserService extends DefaultOAuth2UserService {
 
     private User updateUser(User user, OAuth2User oAuth2User){
 
-        log.info("update!!");
+        log.info("user update : {}", user.getNickname());
         Integer id = oAuth2User.getAttribute("id");          // GitHub ID
         String avatar = oAuth2User.getAttribute("avatar_url"); // 프로필 이미지
         user.setGithubId(id.toString());
@@ -137,8 +129,6 @@ public class GithubUserService extends DefaultOAuth2UserService {
         ObjectMapper mapper = new ObjectMapper();
         try{
             String s = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(response.getBody());
-            System.out.println("응답요청!!");
-            System.out.println(s);
         } catch (JsonProcessingException e) {
         }
     }

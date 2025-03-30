@@ -4,18 +4,18 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Data
-public class TitleDto {
+public class MainTitleDto {
     private Long id;
     private String head;
-    private String email;
+    private String name;
     private Long view;
     private LocalDateTime created;
 
     // 생성자를 통한 매핑
-    public TitleDto(Long id, String head, String email, Long view, LocalDateTime created) {
+    public MainTitleDto(Long id, String head, String name, Long view, LocalDateTime created) {
         this.id = id;
         this.head = head;
-        this.email = email;
+        this.name = name;
         this.view = view;
         this.created = created;
     }

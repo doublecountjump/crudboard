@@ -20,7 +20,6 @@ public class LocalUserProvider implements AuthenticationProvider {
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        log.info("LocalProvider!!");
         log.info("name : {}", authentication.getName());
         String name = authentication.getName();
         String password = authentication.getCredentials().toString();
