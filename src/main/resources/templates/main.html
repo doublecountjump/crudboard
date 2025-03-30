@@ -112,9 +112,71 @@
         .btn:hover {
             opacity: 0.9;
         }
+        .search-container {
+            width: 80%;
+            margin: 20px auto;
+            text-align: center;
+        }
+
+        .search-form {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .search-select {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px 0 0 4px;
+            background-color: #f8f9fa;
+        }
+
+        .search-input {
+            padding: 8px 12px;
+            width: 50%;
+            border: 1px solid #ddd;
+            border-left: none;
+        }
+
+        .search-button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: 1px solid #007bff;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+        }
+
+        .search-button:hover {
+            background-color: #0069d9;
+        }
+        .home-link {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .home-button {
+            display: inline-block;
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .home-button:hover {
+            background-color: #218838;
+            color: white;
+        }
     </style>
 </head>
 <body>
+<!-- 메인화면 링크 -->
+<div class="home-link">
+    <a href="/" class="home-button">메인화면</a>
+</div>
 <!-- 버튼 컨테이너 -->
 <div class="button-container">
     <!-- 로그인한 경우 -->
@@ -150,11 +212,27 @@
             <span th:text="${title.head}">게시글 제목</span>
         </a>
         <div class="post-info">
-            <span th:text="${'작성자: ' + title.email}">작성자 이메일</span>
+            <span th:text="${'작성자: ' + title.name}">작성자</span>
             <span style="margin-left: 15px;" th:text="${'조회수: ' + title.view}">조회수</span>
         </div>
     </div>
 </div>
+
+<!-- 검색 폼 -->
+<div class="search-container">
+    <form th:action="@{/search}" method="get" class="search-form">
+        <select name="type" class="search-select">
+            <option value="HEAD">제목</option>
+            <option value="HEAD_CONTENT">제목+내용</option>
+            <option value="NICKNAME">작성자</option>
+        </select>
+        <input type="text" name="content" placeholder="검색어를 입력하세요" class="search-input" required>
+        <input type="hidden" name="page" value="1">
+        <button type="submit" class="search-button">검색</button>
+    </form>
+</div>
+
+
 <div class="pagination-container">
     <div class="pagination" th:if="${!titleList.isEmpty()}">
         <!-- 이전 페이지 -->

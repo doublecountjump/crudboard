@@ -51,6 +51,7 @@ public class Comment {
         this.isParent =false;
     }
 
+
     public Comment(Post post, User user){
         this.setPost(post);
         this.setUser(user);

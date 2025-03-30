@@ -11,16 +11,15 @@ import org.springframework.stereotype.Service;
 import test.crudboard.entity.Like;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.User;
-import test.crudboard.entity.dto.PostDto;
-import test.crudboard.entity.dto.PostResponseDto;
-import test.crudboard.entity.dto.TitleDto;
+import test.crudboard.entity.dto.CreatePostDto;
+import test.crudboard.entity.dto.DetailPostDto;
+import test.crudboard.entity.dto.MainTitleDto;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.repository.LikeRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -34,14 +33,15 @@ public class PostService{
     private final RedisTemplate<String, String> template;
     private static final String VIEW_COUNT_PREFIX = "view:content:";
 
-    public Post save(PostDto postDto){
-        System.out.println(postDto.getName());
-        User user = userRepository.findUserByNickname(postDto.getName())
+    //게시글 저장
+    public Post save(CreatePostDto createPostDto){
+        System.out.println(createPostDto.getName());
+        User user = userRepository.findUserByNickname(createPostDto.getName())
                 .orElseThrow(() -> new EntityNotFoundException("entity not found"));
 
         Post post = Post.builder()
-                .head(postDto.getHead())
-                .context(postDto.getContext())
+                .head(createPostDto.getHead())
+                .context(createPostDto.getContext())
                 .view(0L)
                 .build();
         post.setUser(user);
@@ -53,28 +53,38 @@ public class PostService{
         return postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("not found!!"));
     }
 
-    public Page<TitleDto> getTitleList(Integer page){
+    /**
+     * 메인화면의 타이틀 목록을 가져옴
+     * @param page 가져오고자 하는 페이지
+     */
+    public Page<MainTitleDto> getTitleList(Integer page){
         PageRequest created = PageRequest.of(page - 1, 5, Sort.by("created").descending());
-        Page<TitleDto> postList = postRepository.findPostList(created);
+        Page<MainTitleDto> postList = postRepository.findPostList(created);
 
-        for (TitleDto titleDto : postList) {
-            String key = VIEW_COUNT_PREFIX + titleDto.getId();
+        for (MainTitleDto mainTitleDto : postList) {
+            String key = VIEW_COUNT_PREFIX + mainTitleDto.getId();
             String view = template.opsForValue().get(key);
 
             if(view!=null){
-                titleDto.setView(Long.parseLong(view));
+                mainTitleDto.setView(Long.parseLong(view));
             }else{
-                titleDto.setView(0L);
+                mainTitleDto.setView(0L);
             }
         }
         
         return postList;
     }
 
-    public PostResponseDto getPostResponseDtoById(Long id){
+    /**
+     * 해당하는 id의 게시글을 가져옴
+     * @param id 찾고자 하는 게시글
+     * @return
+     */
+    public DetailPostDto getDetailPostDtoById(Long id){
         String key = VIEW_COUNT_PREFIX + id;
         Post post = postRepository.findPostByUserId(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
 
+        //redis 에서 게시글의 조회수를 가져옴, 없으면 추가
         if(template.hasKey(key)){
             template.opsForValue().increment(key);
         }else {
@@ -82,7 +92,7 @@ public class PostService{
         }
         Long view = Long.parseLong(Objects.requireNonNull(template.opsForValue().get(key)));
 
-        return new PostResponseDto(post, view);
+        return new DetailPostDto(post, view);
     }
 
     public boolean isPostOwner(Long postId, String name){
@@ -94,6 +104,11 @@ public class PostService{
         log.info("Delete Post! id : {}", id);
     }
 
+    /**
+     * 현재 사용자를 게시글의 추천자로 등록
+     * @param postId
+     * @param name
+     */
     public void recommendPost(Long postId, String name) {
         boolean b = likeRepository.existsLikeByPostIdAndUserNickname(postId, name);
         if(b){
@@ -109,4 +124,16 @@ public class PostService{
         }
     }
 
+    public Page<MainTitleDto> searchPostByHead(String text, PageRequest created) {
+        return postRepository.findMainTitleDtoByPostHead(text, created);
+    }
+
+    public Page<MainTitleDto> searchPostByHeadOrContent(String text, PageRequest created) {
+        return postRepository.findMainTitleDtoByPostHeadOrPostContent(text, created);
+    }
+
+
+    public Page<MainTitleDto> searchPostByNickname(String text, PageRequest created) {
+        return postRepository.findMainTitleDtoByUserNickname(text, created);
+    }
 }

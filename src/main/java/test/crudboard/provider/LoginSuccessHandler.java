@@ -33,19 +33,18 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException, ServletException {
-        log.info("Handler Start");
-
         String email = null;
+
+        // 로컬, sso 로그인에 따라 email 추출
         if (authentication.getPrincipal() instanceof OAuth2User) {
             OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
             email = oauth2User.getAttribute("email");
         } else if (authentication.getPrincipal() instanceof UserDetails) {
-            UserDetails userDetails = (LocalUserDetails) authentication.getPrincipal();
+            LocalUserDetails userDetails = (LocalUserDetails) authentication.getPrincipal();
             email = userDetails.getUsername();
         }
 
-        log.info("Generated");
-
+        //토큰 생성 후 전달
         String token = jwtService.generateToken(email);
         refreshTokenService.GenerateToken(email);
         Cookie cookie = new Cookie("jwt", token);

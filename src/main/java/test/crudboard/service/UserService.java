@@ -1,7 +1,6 @@
 package test.crudboard.service;
 
 
-import com.nimbusds.openid.connect.sdk.claims.UserInfo;
 import com.sun.jdi.request.DuplicateRequestException;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
@@ -25,10 +24,11 @@ public class UserService {
     private final JpaUserRepository repository;
     private final PasswordEncoder encoder;
     public User save(UserJoinDto userJoinDto){
-
+        //사용자가 존재하는지 확인
         if(repository.findUserByEmail(userJoinDto.getEmail()).isPresent()){
             throw new DuplicateRequestException("user already exist");
-        }else if(repository.findUserByNickname(userJoinDto.getNickname()).isPresent()){
+        }//닉네임 중복 확인
+        else if(repository.findUserByNickname(userJoinDto.getNickname()).isPresent()){
             throw new DuplicateRequestException("nickname exist");
         }
         User user = User.builder()
@@ -40,10 +40,6 @@ public class UserService {
                 .build();
 
         return repository.save(user);
-    }
-
-    public User findUserById(Long id){
-        return repository.findById(id).orElseThrow(() -> new EntityNotFoundException("user not found"));
     }
 
     public User findUserByNickname(String name){
