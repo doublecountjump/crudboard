@@ -32,7 +32,7 @@ public class Post {
     private String context;
     private Long view;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
