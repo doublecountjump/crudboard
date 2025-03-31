@@ -15,6 +15,7 @@ import test.crudboard.filter.JwtAuthenticationFilter;
 import test.crudboard.provider.LoginSuccessHandler;
 import test.crudboard.provider.local.LocalUserDetailsService;
 import test.crudboard.provider.local.LocalUserProvider;
+import test.crudboard.service.LogoutService;
 
 @Configuration
 @EnableWebSecurity
@@ -24,6 +25,8 @@ public class SecurityConfig {
     private final LocalUserDetailsService localUserDetailsService;
     private final LocalUserProvider provider;
     private final LoginSuccessHandler loginSuccessHandler;
+    private final LogoutService logoutService;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthenticationFilter) throws Exception {
         http
@@ -40,12 +43,12 @@ public class SecurityConfig {
                         .successHandler(loginSuccessHandler)
                 )
                 .logout(l -> l.addLogoutHandler((request, response, authentication) ->{
+                    logoutService.invalidateToken(request); //토큰 무효화(블랙리스트 추가)
                     Cookie cookie = new Cookie("jwt", null);
                     cookie.setMaxAge(0);
                     cookie.setPath("/");
                     response.addCookie(cookie);
-                })
-                        .logoutSuccessUrl("/"))
+                }).logoutSuccessUrl("/"))
 
                 .csrf(csrf -> csrf.disable())
                 .userDetailsService(localUserDetailsService)

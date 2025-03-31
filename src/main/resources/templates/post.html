@@ -16,26 +16,34 @@
             min-height: 200px;
             resize: vertical;
         }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
 <h2>게시글 작성</h2>
-<form th:action="@{/post/create}" method="post">
+<form th:action="@{/post/create}" th:object="${createPostDto}" method="post">
     <div class="form-group">
         <label for="name">작성자</label>
-        <!-- userId를 hidden input으로도 전송하면서, 보여주기용 readonly input도 사용 -->
-        <input type="hidden" id="name" name="name" th:value="${name}">
-        <input type="text" th:value="${name}" readonly class="form-control">
+        <!-- 기존 데이터 유지 -->
+        <input type="hidden" id="name" name="name" th:value="*{name}">
+        <input type="text" th:value="*{name}" readonly class="form-control">
     </div>
 
     <div class="form-group">
         <label for="head">제목</label>
-        <input type="text" id="head" name="head" required class="form-control">
+        <input type="text" id="head" name="head" th:field="*{head}" class="form-control">
+        <div class="error" th:if="${#fields.hasErrors('head')}" th:errors="*{head}">
+            제목은 최소 22자 이상이어야 합니다.
+        </div>
     </div>
 
     <div class="form-group">
         <label for="context">내용</label>
-        <textarea id="context" name="context" class="form-control"></textarea>
+        <textarea id="context" name="context" th:field="*{context}" class="form-control"></textarea>
     </div>
 
     <button type="submit">작성완료</button>

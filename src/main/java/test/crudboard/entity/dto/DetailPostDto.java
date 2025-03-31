@@ -7,7 +7,7 @@ import test.crudboard.entity.Post;
 
 @Data
 @AllArgsConstructor
-public class PostResponseDto {
+public class DetailPostDto {
     private Post post;
     private Long view;
 }

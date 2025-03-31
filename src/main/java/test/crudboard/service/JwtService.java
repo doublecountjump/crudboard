@@ -10,10 +10,13 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.WebUtils;
 import test.crudboard.entity.Token;
 import test.crudboard.entity.User;
@@ -29,13 +32,15 @@ import java.util.Date;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class JwtService {
     private final UserService userService;
-    private final OAuth2ClientProperties oAuth2ClientProperties;
+    private final RedisTemplate<String, String> template;
 
     @Value("${jwt.secret}")
     private String secretKey;
 
+    //토큰 생성 메서드
     public String generateToken(String email){
         User user = userService.findUserByEmail(email);
 
@@ -56,6 +61,16 @@ public class JwtService {
 
     }
 
+    /**
+     * 토큰이 블랙리스트인지 확인
+     * @param token
+     * @return true : 블랙리스트에 존재, false : 블랙리스트에 없음
+     */
+    private boolean isTokenBlacklisted(String token) {
+       return Boolean.TRUE.equals(template.hasKey("blacklist:" + token));
+    }
+
+    //토큰 검증 메서드
     public boolean validToken(String token){
         try{
             Jwts.parserBuilder()
@@ -74,12 +89,17 @@ public class JwtService {
     public String extractToken(HttpServletRequest request){
         Cookie jwtCookie = WebUtils.getCookie(request, "jwt");
         if(jwtCookie == null){
-            System.out.println("cookie is null!!");
+
         }
         return jwtCookie != null ? jwtCookie.getValue() : null;
 
     }
 
+    /**
+     * 토큰의 클레임 정보를 추출
+     * @param token JWT 토큰 문자열
+     * @return 토큰에 포함된 클레임 정보
+     */
     public Claims parseClaims(String token){
         return Jwts.parserBuilder()
                 .setSigningKey(getSecretKey())
