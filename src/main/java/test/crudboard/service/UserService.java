@@ -58,6 +58,7 @@ public class UserService {
     public UserInfoDto getUserInfo(String name){
         User user = repository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException());
 
+        System.out.println("service");
         return UserInfoDto.builder()
                 .id(user.getId())
                 .username(user.getNickname())

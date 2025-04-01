@@ -82,7 +82,7 @@ public class PostService{
      */
     public DetailPostDto getDetailPostDtoById(Long id){
         String key = VIEW_COUNT_PREFIX + id;
-        Post post = postRepository.findPostByUserId(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+        Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
 
         //redis 에서 게시글의 조회수를 가져옴, 없으면 추가
         if(template.hasKey(key)){
