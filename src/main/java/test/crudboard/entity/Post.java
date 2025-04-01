@@ -46,12 +46,9 @@ public class Post {
 
 
     @OneToMany(mappedBy = "post",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @BatchSize(size = 10)
     private List<Comment> commentList = new ArrayList<>();
 
     @OneToMany(mappedBy = "post",fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<Like> likeList = new ArrayList<>();
 
     public int getLikeCount() {
