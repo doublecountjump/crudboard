@@ -99,6 +99,16 @@ public class PostService{
         return postRepository.existsPostByIdAndUserNickname(postId, name);
     }
 
+    public Post update(Long postId, CreatePostDto postDto) {
+        Post post = postRepository.findById(postId)
+                .orElseThrow(() -> new EntityNotFoundException("entity not found"));
+
+        post.setHead(postDto.getHead());
+        post.setContext(postDto.getContext());
+
+        return post;
+    }
+
     public void deletePost(Long id) {
         postRepository.deleteById(id);
         log.info("Delete Post! id : {}", id);

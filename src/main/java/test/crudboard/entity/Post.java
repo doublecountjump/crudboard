@@ -32,7 +32,7 @@ public class Post {
     private String context;
     private Long view;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -46,12 +46,9 @@ public class Post {
 
 
     @OneToMany(mappedBy = "post",fetch = FetchType.LAZY,cascade = CascadeType.ALL,orphanRemoval = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @BatchSize(size = 10)
     private List<Comment> commentList = new ArrayList<>();
 
     @OneToMany(mappedBy = "post",fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     private List<Like> likeList = new ArrayList<>();
 
     public int getLikeCount() {
