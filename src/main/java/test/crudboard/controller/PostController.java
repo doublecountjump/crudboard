@@ -51,6 +51,8 @@ public class PostController {
         model.addAttribute("post", dto.getPost());
         model.addAttribute("view", dto.getView());
         model.addAttribute("currentUserNickname", user != null ? user.getUsername() : null);
+
+        System.out.println("controller ENd");
         return "post-detail.html";
     }
 

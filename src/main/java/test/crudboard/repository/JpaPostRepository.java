@@ -14,7 +14,8 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     @Query("select new test.crudboard.entity.dto.MainTitleDto(p.id, p.head, p.user.nickname, p.view, p.created) from Post p")
     Page<MainTitleDto> findPostList(Pageable page);
 
-    @Query("select p from Post p left join fetch p.commentList c " +
+    //jpa  에서 join문을 만들 때, 명시적으로 join 한 것만 join함. post의 user가 eager로 설정되어도, 지정하지 않으면  지연로딩 처리됨
+    @Query("select p from Post p left join fetch p.user left join fetch p.commentList c left join fetch c.user " +
             "where p.id = :id")
     Optional<Post> findPostByUserId(@Param("id") Long id);
 

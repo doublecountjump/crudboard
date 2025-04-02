@@ -7,6 +7,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import test.crudboard.error.TokenExpiredException;
 
 @ControllerAdvice
 public class SecurityExceptionHandler {
@@ -25,6 +26,12 @@ public class SecurityExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
     public String badCredentialsExceptionHandler(AccessDeniedException e, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("errorMessage", "BAD");
+        return "redirect:/";
+    }
+
+    @ExceptionHandler(TokenExpiredException.class)
+    public String TokenExpiredException(AccessDeniedException e, RedirectAttributes redirectAttributes){
+        redirectAttributes.addFlashAttribute("tokenExpired",e.getMessage());
         return "redirect:/";
     }
 }

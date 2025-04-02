@@ -25,7 +25,6 @@ import java.io.IOException;
  * session 방식과 비교했을때 jwt 방식의 장점은?
  */
 
-@Component
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -69,9 +68,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Authentication authentication =
                         new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
-
-                long end = System.currentTimeMillis() - start;
-                log.info("[Filter] JwtAuthenticationFilter.doFilterInternal - {}ms", end);
             }
         }catch (TokenExpiredException e){
             log.warn("JWT token is expired. Removing cookie...");
@@ -86,10 +82,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             SecurityContextHolder.clearContext();
             long end = System.currentTimeMillis() - start;
             log.info("[Filter] JwtAuthenticationFilter.doFilterInternal (토큰 만료) - {}ms", end);
-        }finally {
-            filterChain.doFilter(request,response);
         }
 
+        filterChain.doFilter(request,response);
+        long end = System.currentTimeMillis() - start;
+        log.info("[Filter] JwtAuthenticationFilter.doFilterInternal - {}ms", end);
+
+
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getRequestURI();
+        return path.equals("/favicon.ico") || path.startsWith("/static/");
     }
 
 }

@@ -26,7 +26,7 @@ import java.util.Objects;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-public class PostService{
+public class    PostService{
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
     private final LikeRepository likeRepository;
@@ -91,7 +91,7 @@ public class PostService{
             template.opsForValue().set(key,String.valueOf(post.getView() + 1));
         }
         Long view = Long.parseLong(Objects.requireNonNull(template.opsForValue().get(key)));
-
+        System.out.println("service end");
         return new DetailPostDto(post, view);
     }
 

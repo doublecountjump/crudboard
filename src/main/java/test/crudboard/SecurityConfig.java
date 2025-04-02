@@ -15,6 +15,7 @@ import test.crudboard.filter.JwtAuthenticationFilter;
 import test.crudboard.provider.LoginSuccessHandler;
 import test.crudboard.provider.local.LocalUserDetailsService;
 import test.crudboard.provider.local.LocalUserProvider;
+import test.crudboard.service.JwtService;
 import test.crudboard.service.LogoutService;
 
 @Configuration
@@ -55,5 +56,10 @@ public class SecurityConfig {
                 .authenticationProvider(provider);
 
         return http.build();
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService) {
+        return new JwtAuthenticationFilter(jwtService);
     }
 }

@@ -202,7 +202,9 @@
 
     <!-- 댓글 섹션 -->
     <div class="comment-section">
-        <div class="comment-header">댓글</div>
+        <div class="comment-header">
+            댓글 <span th:text="${'(' + post.commentList.size() + ')'}"></span>
+        </div>
 
         <!-- 댓글 목록 -->
         <div class="comment-list">

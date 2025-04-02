@@ -20,6 +20,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.WebUtils;
 import test.crudboard.entity.Token;
 import test.crudboard.entity.User;
+import test.crudboard.error.ErrorCode;
+import test.crudboard.error.TokenExpiredException;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.repository.TokenRepository;
 
@@ -76,12 +78,12 @@ public class JwtService {
             Jwts.parserBuilder()
                     .setSigningKey(getSecretKey())
                     .build()
-                    .parseClaimsJws(token);
+                    .parseClaimsJws(token); //토큰 파싱, 서명 검증, 그리고 토큰의 만료 검증도 포함함
 
             return true;
         }catch (ExpiredJwtException e) {
-            throw e;
-        } catch (JwtException e) {     //에러 구체적으로?
+            throw new TokenExpiredException(ErrorCode.JWT_TOKEN_IS_EXPIRED);
+        } catch (JwtException e) {
             return false;
         }
     }
