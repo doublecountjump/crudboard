@@ -43,9 +43,17 @@ public class MainController {
         if(userDetails != null){
             model.addAttribute("username", userDetails.getUsername());
         }
-
         Page<MainTitleDto> titleList = postService.getTitleList(page);
+
+        int totalPages = titleList.getTotalPages();
+        int pageSize = 10; // 한 블록에 보여줄 페이지 수
+        int currentBlock = (int) Math.ceil((double) page / pageSize);
+        int startPage = (currentBlock - 1) * pageSize + 1;
+        int endPage = Math.min(startPage + pageSize - 1, totalPages);
+
         model.addAttribute("titleList",titleList);
+        model.addAttribute("startPage", startPage);
+        model.addAttribute("endPage", endPage);
 
         return "main";
     }

@@ -66,7 +66,7 @@ public class JwtService {
      * @param token
      * @return true : 블랙리스트에 존재, false : 블랙리스트에 없음
      */
-    private boolean isTokenBlacklisted(String token) {
+    public boolean isTokenBlacklisted(String token) {
        return Boolean.TRUE.equals(template.hasKey("blacklist:" + token));
     }
 

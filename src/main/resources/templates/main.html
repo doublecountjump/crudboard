@@ -235,17 +235,23 @@
 
 <div class="pagination-container">
     <div class="pagination" th:if="${!titleList.isEmpty()}">
-        <!-- 이전 페이지 -->
-        <a th:if="${titleList.hasPrevious()}" th:href="@{/{page}(page=${titleList.getNumber()})}" class="page-link">&laquo; 이전</a>
+        <!-- 이전 블록으로 이동 -->
+        <span th:if="${titleList.getNumber() + 1 > 1}">
+        <a th:href="@{/1}" class="page-link">&laquo; 처음</a>
+        <a th:href="@{/{page}(page=${titleList.getNumber()})}" class="page-link">&lt; 이전</a>
+    </span>
 
         <!-- 페이지 번호 -->
-        <span th:each="i : ${#numbers.sequence(1, titleList.getTotalPages())}">
-            <a th:if="${i != titleList.getNumber() + 1}" th:href="@{/{page}(page=${i})}" class="page-link" th:text="${i}"></a>
-            <span th:if="${i == titleList.getNumber() + 1}" class="current-page" th:text="${i}"></span>
-        </span>
+        <span th:each="i : ${#numbers.sequence(startPage, endPage)}">
+        <a th:if="${i != titleList.getNumber() + 1}" th:href="@{/{page}(page=${i})}" class="page-link" th:text="${i}"></a>
+        <span th:if="${i == titleList.getNumber() + 1}" class="current-page" th:text="${i}"></span>
+    </span>
 
-        <!-- 다음 페이지 -->
-        <a th:if="${titleList.hasNext()}" th:href="@{/{page}(page=${titleList.getNumber() + 2})}" class="page-link">다음 &raquo;</a>
+        <!-- 다음 블록으로 이동 -->
+        <span th:if="${titleList.getNumber() + 1 < titleList.getTotalPages()}">
+        <a th:href="@{/{page}(page=${titleList.getNumber() + 2})}" class="page-link">다음 &gt;</a>
+        <a th:href="@{/{page}(page=${titleList.getTotalPages()})}" class="page-link">마지막 &raquo;</a>
+    </span>
     </div>
 </div>
 </body>

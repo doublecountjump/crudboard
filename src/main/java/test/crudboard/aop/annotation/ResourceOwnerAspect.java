@@ -32,6 +32,7 @@ public class ResourceOwnerAspect {
      */
     @Around("@annotation(checkResourceOwner)")
     public Object checkOwner(ProceedingJoinPoint pjp, CheckResourceOwner checkResourceOwner) throws Throwable{
+        long start = System.currentTimeMillis();
         Object[] args = pjp.getArgs();
         Long resourceId = (Long) args[0];
         Object user = args[1];
@@ -49,7 +50,11 @@ public class ResourceOwnerAspect {
             throw new AuthenticationCredentialsNotFoundException("권한이 없습니다");
         }
 
-        return pjp.proceed();
+        Object proceed = pjp.proceed();
+        long end = System.currentTimeMillis() - start;
+        log.info("[annotation] checkOwner = {}ms",end);
+
+        return proceed;
     }
 
     private boolean checkPostOwner(Long resourceId, Object user) {
