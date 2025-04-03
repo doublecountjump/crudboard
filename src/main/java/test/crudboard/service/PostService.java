@@ -2,7 +2,6 @@ package test.crudboard.service;
 
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
@@ -10,6 +9,7 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import test.crudboard.entity.Comment;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.User;
@@ -37,7 +37,6 @@ import static test.crudboard.type.RedisKeyType.*;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-@Transactional
 public class  PostService{
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
@@ -45,6 +44,7 @@ public class  PostService{
     private final RedisTemplate<String, String> template;
 
     //게시글 저장
+    @Transactional
     public Post save(CreatePostDto createPostDto){
         User user = userRepository.findUserByNickname(createPostDto.getName())
                 .orElseThrow(() -> new EntityNotFoundException("entity not found"));
@@ -113,6 +113,7 @@ public class  PostService{
      * @param postId 게시글의 id
      * @return
      */
+    @Transactional(readOnly = true)
     public Post getDetailPostDtoById(Long postId){
 
         ScanOptions scanOptions = ScanOptions.scanOptions().match(POST_ALL.formatKey(postId)).build();
@@ -179,7 +180,7 @@ public class  PostService{
     public boolean isPostOwner(Long postId, String name){
         return postRepository.existsPostByIdAndUserNickname(postId, name);
     }
-
+    @Transactional
     public Post update(Long postId, CreatePostDto postDto) {
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("entity not found"));
@@ -189,7 +190,7 @@ public class  PostService{
 
         return post;
     }
-
+    @Transactional
     public void deletePost(Long id) {
         postRepository.deleteById(id);
         log.info("Delete Post! id : {}", id);

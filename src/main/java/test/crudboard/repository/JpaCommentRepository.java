@@ -12,10 +12,8 @@ import java.util.Optional;
 public interface JpaCommentRepository extends JpaRepository<Comment, Long> {
     boolean existsCommentByIdAndUserNickname(Long postId, String name);
 
-    @Query("select c from Comment c " +
-            "left join fetch c.child h " +
+    @Query("select distinct c from Comment c " +
             "left join fetch c.user  " +
-            "left join fetch h.user  " +
             "where c.post.id = :id and c.parent is null " +
             "order by c.id desc")
     List<Comment> findCommentsByPostId(@Param("id") Long postId);
