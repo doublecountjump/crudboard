@@ -184,7 +184,7 @@
     </div>
     <div class="post-info">
         <span th:text="${'작성자: ' + post.user.nickname}">작성자</span>
-        <span style="margin-left: 15px;" th:text="${'조회수: ' + view}">조회수</span>
+        <span style="margin-left: 15px;" th:text="${'조회수: ' + post.getView()}">조회수</span>
     </div>
     <div class="like-section">
         <form th:action="@{/post/recommend/{postId}(postId=${post.id})}" method="post" style="display: inline;">
@@ -192,7 +192,7 @@
                     th:classappend="${currentUserNickname != null && post.isLikedByUser(currentUserId)} ? 'liked' : ''">
             <span class="like-icon"
                   th:text="${currentUserId != null && post.isLikedByUser(currentUserId)} ? '❤️' : '🤍'"></span>
-                <span class="like-count" th:text="${post.likeCount}">0</span>
+                <span class="like-count" th:text="${post.like_count}">0</span>
             </button>
         </form>
     </div>

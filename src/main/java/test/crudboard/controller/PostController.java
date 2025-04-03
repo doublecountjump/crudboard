@@ -11,10 +11,11 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import test.crudboard.aop.annotation.CheckResourceOwner;
+import test.crudboard.entity.Post;
 import test.crudboard.entity.dto.CreatePostDto;
-import test.crudboard.entity.dto.DetailPostDto;
 import test.crudboard.entity.enumtype.ResourceType;
 import test.crudboard.provider.JwtUserDetails;
+import test.crudboard.service.LikeService;
 import test.crudboard.service.PostService;
 
 
@@ -27,6 +28,7 @@ import test.crudboard.service.PostService;
 @RequestMapping("/post")
 public class PostController {
     private final PostService postService;
+    private final LikeService likeService;
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create")
@@ -45,22 +47,20 @@ public class PostController {
         return "redirect:/";
     }
 
-    @GetMapping("/{id}")
-    public String getDetailPost(@PathVariable Long id,@AuthenticationPrincipal JwtUserDetails user, Model model){
-        DetailPostDto dto = postService.getDetailPostDtoById(id);
-        model.addAttribute("post", dto.getPost());
-        model.addAttribute("view", dto.getView());
+    @GetMapping("/{postId}")
+    public String getDetailPost(@PathVariable Long postId,@AuthenticationPrincipal JwtUserDetails user, Model model){
+        Post post = postService.getDetailPostDtoById(postId);
+        model.addAttribute("post", post);
         model.addAttribute("currentUserNickname", user != null ? user.getUsername() : null);
 
-        System.out.println("controller ENd");
-        return "post-detail.html";
+        return "post-detail";
     }
 
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/recommend/{postId}")
     public String recommendPost(@PathVariable Long postId, @AuthenticationPrincipal JwtUserDetails user){
-        postService.recommendPost(postId,user.getUsername());
+        likeService.recommendPost(postId,user.getUsername());
 
         return "redirect:/post/" + postId;
     }

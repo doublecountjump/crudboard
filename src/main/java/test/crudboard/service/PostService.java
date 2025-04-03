@@ -6,21 +6,29 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
+import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
-import test.crudboard.entity.Like;
+import test.crudboard.entity.Comment;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.User;
 import test.crudboard.entity.dto.CreatePostDto;
-import test.crudboard.entity.dto.DetailPostDto;
 import test.crudboard.entity.dto.MainTitleDto;
+import test.crudboard.repository.JpaCommentRepository;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
-import test.crudboard.repository.LikeRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.util.Objects;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static test.crudboard.type.RedisField.*;
+import static test.crudboard.type.RedisKeyType.*;
 
 
 /**
@@ -33,11 +41,9 @@ import java.util.Objects;
 public class  PostService{
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
-    private final LikeRepository likeRepository;
+    private final JpaCommentRepository commentRepository;
     private final RedisTemplate<String, String> template;
-    private static final String VIEW_COUNT = "view:content:";
-    private static final String POST_DATA = "post:data:";
-    private static final String POST_STATUS = "post:status:";
+
     //게시글 저장
     public Post save(CreatePostDto createPostDto){
         User user = userRepository.findUserByNickname(createPostDto.getName())
@@ -49,8 +55,26 @@ public class  PostService{
                 .view(0L)
                 .build();
         post.setUser(user);
+        Post save = postRepository.save(post);
 
-        return postRepository.save(post);
+        try {
+            String dataKey = POST_DATA.formatKey(save.getId());
+            template.opsForHash().put(dataKey,HEAD, save.getHead());
+            template.opsForHash().put(dataKey,CONTEXT, save.getContext());
+            template.opsForHash().put(dataKey,NICKNAME, user.getNickname());
+            template.opsForHash().put(dataKey,USER_ID,user.getId());
+            template.expire(dataKey, 1, TimeUnit.HOURS);
+
+            String statsKey = POST_STATS.formatKey(save.getId());
+            template.opsForHash().put(statsKey,VIEW,0L);
+            template.opsForHash().put(statsKey,LIKES,0L);
+            template.expire(statsKey, 1, TimeUnit.HOURS);
+
+        }catch (Exception e){
+            log.error("Redis Save Error");
+        }
+
+        return save;
     }
 
     public Post findById(Long postId){
@@ -65,39 +89,92 @@ public class  PostService{
         PageRequest created = PageRequest.of(page - 1, 5, Sort.by("created").descending());
         Page<MainTitleDto> postList = postRepository.findPostList(created);
 
-        for (MainTitleDto mainTitleDto : postList) {
-            String key = VIEW_COUNT + mainTitleDto.getId();
-            String view = template.opsForValue().get(key);
+        try {
+            for (MainTitleDto mainTitleDto : postList) {
+                String key = POST_STATS.formatKey(mainTitleDto.getId());
+                Long view = (Long) template.opsForHash().get(key,VIEW);
 
-            if(view!=null){
-                mainTitleDto.setView(Long.parseLong(view));
-            }else{
-                mainTitleDto.setView(0L);
+                if(view == null){
+                    continue;
+                }
+
+                mainTitleDto.setView(view);
             }
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+            log.error("[getTitleList] Redis Error");
         }
-        
+
         return postList;
     }
 
     /**
      * 해당하는 id의 게시글을 가져옴
-     * @param id 찾고자 하는 게시글
+     * @param postId 게시글의 id
      * @return
      */
-    public DetailPostDto getDetailPostDtoById(Long id){
-        String key = VIEW_COUNT + id;
-        Post post = postRepository.findPostByPostId(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+    public Post getDetailPostDtoById(Long postId){
 
-        //redis 에서 게시글의 조회수를 가져옴, 없으면 추가
-        if(template.hasKey(key)){
-            template.opsForValue().increment(key);
-        }else {
-            template.opsForValue().set(key,String.valueOf(post.getView() + 1));
+        ScanOptions scanOptions = ScanOptions.scanOptions().match(POST_ALL.formatKey(postId)).build();
+        Cursor<String> scanResult = template.scan(scanOptions);
+
+        List<String> keys = new ArrayList<>();
+        while(scanResult.hasNext()){
+            keys.add(scanResult.next());
         }
-        Long view = Long.parseLong(Objects.requireNonNull(template.opsForValue().get(key)));
-        System.out.println("service end");
-        return new DetailPostDto(post, view);
+
+        if (keys.isEmpty()){
+            System.out.println("cache miss");
+            //캐시에 없을 때 처리
+            Post post = postRepository.findPostByPostId(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+            putRedis10Minute(post);
+            return post;
+        }
+        System.out.println("cache hit");
+        Map<String, Object> resultMap = new HashMap<>();
+        for(String key : keys){
+            Map<Object, Object> entries = template.opsForHash().entries(key);
+            entries.forEach((k, v) -> resultMap.put(k.toString(), v));
+        }
+
+        List<Comment> commentList = commentRepository.findCommentsByPostId(postId);
+        User user = User.builder()
+                .id((Long) resultMap.get(USER_ID))
+                .nickname((String) resultMap.get(NICKNAME))
+                .build();
+
+
+        return Post.builder()
+                .id(postId)
+                .head((String) resultMap.get(HEAD))
+                .context((String) resultMap.get(CONTEXT))
+                .user(user)
+                .view((Long) resultMap.get(VIEW))
+                .like_count((Long) resultMap.get(LIKES))
+                .commentList(commentList)
+                .build();
+
     }
+
+    private void putRedis10Minute(Post post) {
+        try {
+            String dataKey = POST_DATA.formatKey(post.getId());
+            template.opsForHash().put(dataKey, HEAD, post.getHead());
+            template.opsForHash().put(dataKey, CONTEXT, post.getContext());
+            template.opsForHash().put(dataKey, NICKNAME, post.getUser().getNickname());
+            template.opsForHash().put(dataKey, USER_ID, post.getUser().getId());
+            template.expire(dataKey, 10, TimeUnit.MINUTES);
+
+            String statsKey = POST_STATS.formatKey(post.getId());
+            template.opsForHash().put(statsKey, VIEW, 0L);
+            template.opsForHash().put(statsKey, LIKES, 0L);
+            template.expire(statsKey, 10, TimeUnit.MINUTES);
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+            log.error("레디스 저장 중 에러 발생 : {}",post.getId());
+        }
+    }
+
 
     public boolean isPostOwner(Long postId, String name){
         return postRepository.existsPostByIdAndUserNickname(postId, name);
@@ -118,25 +195,6 @@ public class  PostService{
         log.info("Delete Post! id : {}", id);
     }
 
-    /**
-     * 현재 사용자를 게시글의 추천자로 등록
-     * @param postId
-     * @param name
-     */
-    public void recommendPost(Long postId, String name) {
-        boolean b = likeRepository.existsLikeByPostIdAndUserNickname(postId, name);
-        if(b){
-            likeRepository.deleteLikeByPostIdAndUserNickname(postId, name);
-        }else{
-
-            Like like = Like.builder()
-                    .user(userRepository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException("user not found")))
-                    .post(postRepository.findById(postId).orElseThrow(()-> new EntityNotFoundException("post not found")))
-                    .build();
-
-            likeRepository.save(like);
-        }
-    }
 
     public Page<MainTitleDto> searchPostByHead(String text, PageRequest created) {
         return postRepository.findMainTitleDtoByPostHead(text, created);

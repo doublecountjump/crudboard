@@ -10,20 +10,19 @@ import test.crudboard.entity.Comment;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.User;
 import test.crudboard.repository.JpaCommentRepository;
-import test.crudboard.repository.JpaPostRepository;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
 public class CommentService {
-    private final PostService postRepository;
+    private final PostService postService;
     private final UserService userService;
     private final JpaCommentRepository commentRepository;
 
     public Comment saveParentComment(Long postId, String context, String name){
         User user = userService.findUserByNickname(name);
-        Post post = postRepository.findById(postId);
+        Post post = postService.findById(postId);
         Comment comment = new Comment(post, user);
         comment.setContent(context);
 
@@ -32,7 +31,7 @@ public class CommentService {
 
     public Comment saveChildComment(Long postId, Long parentId, String content, String name) {
         User user = userService.findUserByNickname(name);
-        Post post = postRepository.findById(postId);
+        Post post = postService.findById(postId);
         Comment parent = commentRepository.findById(parentId).orElseThrow(() -> new EntityNotFoundException());
         Comment child = new Comment(post, user, parent);
         child.setContent(content);

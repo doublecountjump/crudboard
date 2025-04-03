@@ -208,7 +208,7 @@
 
     <!-- 게시글 목록 표시 -->
     <div th:each="title : ${titleList.getContent()}" class="post-item">
-        <a th:href="@{/post/{id}(id=${title.id})}" class="post-title">
+        <a th:href="@{/post/{postId}(postId=${title.id})}" class="post-title">
             <span th:text="${title.head}">게시글 제목</span>
         </a>
         <div class="post-info">

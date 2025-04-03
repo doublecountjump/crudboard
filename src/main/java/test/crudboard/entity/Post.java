@@ -31,6 +31,7 @@ public class Post {
     private String head;
     private String context;
     private Long view;
+    private Long like_count;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
@@ -50,10 +51,6 @@ public class Post {
 
     @OneToMany(mappedBy = "post",fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likeList = new ArrayList<>();
-
-    public int getLikeCount() {
-        return likeList.size();
-    }
 
     public boolean isLikedByUser(String name) {
         if(name == null) return false;
