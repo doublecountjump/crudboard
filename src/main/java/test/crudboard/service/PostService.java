@@ -22,20 +22,24 @@ import org.springframework.data.domain.Sort;
 
 import java.util.Objects;
 
+
+/**
+ * 게시글에서 가장 자주 사용되는 기능을 생성(게시글, 댓글) 그리고 게시글 조회로 가정함
+ */
 @Service
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-public class    PostService{
+public class  PostService{
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
     private final LikeRepository likeRepository;
     private final RedisTemplate<String, String> template;
-    private static final String VIEW_COUNT_PREFIX = "view:content:";
-
+    private static final String VIEW_COUNT = "view:content:";
+    private static final String POST_DATA = "post:data:";
+    private static final String POST_STATUS = "post:status:";
     //게시글 저장
     public Post save(CreatePostDto createPostDto){
-        System.out.println(createPostDto.getName());
         User user = userRepository.findUserByNickname(createPostDto.getName())
                 .orElseThrow(() -> new EntityNotFoundException("entity not found"));
 
@@ -62,7 +66,7 @@ public class    PostService{
         Page<MainTitleDto> postList = postRepository.findPostList(created);
 
         for (MainTitleDto mainTitleDto : postList) {
-            String key = VIEW_COUNT_PREFIX + mainTitleDto.getId();
+            String key = VIEW_COUNT + mainTitleDto.getId();
             String view = template.opsForValue().get(key);
 
             if(view!=null){
@@ -81,8 +85,8 @@ public class    PostService{
      * @return
      */
     public DetailPostDto getDetailPostDtoById(Long id){
-        String key = VIEW_COUNT_PREFIX + id;
-        Post post = postRepository.findPostByUserId(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+        String key = VIEW_COUNT + id;
+        Post post = postRepository.findPostByPostId(id).orElseThrow(() -> new EntityNotFoundException("entity not found"));
 
         //redis 에서 게시글의 조회수를 가져옴, 없으면 추가
         if(template.hasKey(key)){

@@ -17,7 +17,7 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     //jpa  에서 join문을 만들 때, 명시적으로 join 한 것만 join함. post의 user가 eager로 설정되어도, 지정하지 않으면  지연로딩 처리됨
     @Query("select p from Post p left join fetch p.user left join fetch p.commentList c left join fetch c.user " +
             "where p.id = :id")
-    Optional<Post> findPostByUserId(@Param("id") Long id);
+    Optional<Post> findPostByPostId(@Param("id") Long id);
 
     @Query("select count(*) from Post p")
     Long getCount();
