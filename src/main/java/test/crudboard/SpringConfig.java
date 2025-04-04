@@ -21,15 +21,4 @@ public class SpringConfig {
         return new BCryptPasswordEncoder();
     }
 
-/*    @Bean
-    public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory){
-        RedisCacheConfiguration redisConfig = RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMinutes(10));
-
-        Map<String, RedisCacheConfiguration> config = new HashMap<>();
-
-        config.put()
-
-
-
-    }*/
 }

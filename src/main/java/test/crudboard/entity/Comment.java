@@ -9,13 +9,18 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
 @Entity
 @Data
 @NoArgsConstructor
+@EntityListeners(AuditingEntityListener.class)
 public class Comment {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "comment_id")
@@ -31,6 +36,10 @@ public class Comment {
 
     @Column(nullable = false)
     private String content;
+
+    @CreatedDate
+    @Column(updatable = false)
+    LocalDateTime created;
 
     @ManyToOne
     @JoinColumn(name = "parent_id")

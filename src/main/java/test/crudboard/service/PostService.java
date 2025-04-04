@@ -66,8 +66,8 @@ public class  PostService{
             template.expire(dataKey, 1, TimeUnit.HOURS);
 
             String statsKey = POST_STATS.formatKey(save.getId());
-            template.opsForHash().put(statsKey,VIEW,0L);
-            template.opsForHash().put(statsKey,LIKES,0L);
+            template.opsForHash().put(statsKey,VIEW,"0");
+            template.opsForHash().put(statsKey,LIKES,"0");
             template.expire(statsKey, 1, TimeUnit.HOURS);
 
         }catch (Exception e){
@@ -86,7 +86,7 @@ public class  PostService{
      * @param page 가져오고자 하는 페이지
      */
     public Page<MainTitleDto> getTitleList(Integer page){
-        PageRequest created = PageRequest.of(page - 1, 5, Sort.by("created").descending());
+        PageRequest created = PageRequest.of(page - 1, 20, Sort.by("created").descending());
         Page<MainTitleDto> postList = postRepository.findPostList(created);
 
         try {
@@ -139,8 +139,10 @@ public class  PostService{
         }
 
         List<Comment> commentList = commentRepository.findCommentsByPostId(postId);
+
+
         User user = User.builder()
-                .id((Long) resultMap.get(USER_ID))
+                .id(Long.parseLong((String)resultMap.get(USER_ID)))
                 .nickname((String) resultMap.get(NICKNAME))
                 .build();
 
@@ -150,8 +152,8 @@ public class  PostService{
                 .head((String) resultMap.get(HEAD))
                 .context((String) resultMap.get(CONTEXT))
                 .user(user)
-                .view((Long) resultMap.get(VIEW))
-                .like_count((Long) resultMap.get(LIKES))
+                .view(Long.parseLong((String)resultMap.get(VIEW)))
+                .like_count(Long.parseLong((String)resultMap.get(LIKES)))
                 .commentList(commentList)
                 .build();
 
@@ -163,12 +165,12 @@ public class  PostService{
             template.opsForHash().put(dataKey, HEAD, post.getHead());
             template.opsForHash().put(dataKey, CONTEXT, post.getContext());
             template.opsForHash().put(dataKey, NICKNAME, post.getUser().getNickname());
-            template.opsForHash().put(dataKey, USER_ID, post.getUser().getId());
+            template.opsForHash().put(dataKey, USER_ID, String.valueOf(post.getUser().getId()));
             template.expire(dataKey, 10, TimeUnit.MINUTES);
 
             String statsKey = POST_STATS.formatKey(post.getId());
-            template.opsForHash().put(statsKey, VIEW, 0L);
-            template.opsForHash().put(statsKey, LIKES, 0L);
+            template.opsForHash().put(statsKey, VIEW, String.valueOf(post.getView()));
+            template.opsForHash().put(statsKey, LIKES,  String.valueOf(post.getLike_count()));
             template.expire(statsKey, 10, TimeUnit.MINUTES);
         }catch (Exception e){
             System.out.println(e.getMessage());
