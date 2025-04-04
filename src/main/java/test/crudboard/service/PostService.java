@@ -10,12 +10,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import test.crudboard.entity.Comment;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.User;
-import test.crudboard.entity.dto.CreatePostDto;
-import test.crudboard.entity.dto.MainTitleDto;
-import test.crudboard.repository.JpaCommentRepository;
+import test.crudboard.entity.dto.*;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import org.springframework.data.domain.PageRequest;
@@ -40,7 +37,7 @@ import static test.crudboard.type.RedisKeyType.*;
 public class  PostService{
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
-    private final JpaCommentRepository commentRepository;
+    private final CommentService commentService;
     private final RedisTemplate<String, String> template;
 
     //게시글 저장
@@ -114,7 +111,7 @@ public class  PostService{
      * @return
      */
     @Transactional(readOnly = true)
-    public Post getDetailPostDtoById(Long postId){
+    public PostDetailDto getPostDetailDtoById(Long postId, Integer page){
 
         ScanOptions scanOptions = ScanOptions.scanOptions().match(POST_ALL.formatKey(postId)).build();
         Cursor<String> scanResult = template.scan(scanOptions);
@@ -127,9 +124,11 @@ public class  PostService{
         if (keys.isEmpty()){
             System.out.println("cache miss");
             //캐시에 없을 때 처리
-            Post post = postRepository.findPostByPostId(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
-            putRedis10Minute(post);
-            return post;
+            PostHeaderDto postHeaderDto = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+            PostFooterDto postFooterDto = commentService.getCommentListDto(postId, page);
+            putRedis10Minute(postHeaderDto);
+
+            return new PostDetailDto(postHeaderDto, postFooterDto);
         }
         System.out.println("cache hit");
         Map<String, Object> resultMap = new HashMap<>();
@@ -138,43 +137,38 @@ public class  PostService{
             entries.forEach((k, v) -> resultMap.put(k.toString(), v));
         }
 
-        List<Comment> commentList = commentRepository.findCommentsByPostId(postId);
+        PostFooterDto postFooterDto = commentService.getCommentListDto(postId, page);
 
 
-        User user = User.builder()
-                .id(Long.parseLong((String)resultMap.get(USER_ID)))
-                .nickname((String) resultMap.get(NICKNAME))
-                .build();
+        PostHeaderDto header = new PostHeaderDto();
+        header.setPost_id(postId);
+        header.setHead((String) resultMap.get(HEAD));
+        header.setContext((String) resultMap.get(CONTEXT));
+        header.setView(Long.parseLong((String)resultMap.get(VIEW)));
+        header.setLike_count(Long.parseLong((String)resultMap.get(LIKES)));
+        header.setUser_id(Long.parseLong((String)resultMap.get(USER_ID)));
+        header.setNickname((String) resultMap.get(NICKNAME));
 
-
-        return Post.builder()
-                .id(postId)
-                .head((String) resultMap.get(HEAD))
-                .context((String) resultMap.get(CONTEXT))
-                .user(user)
-                .view(Long.parseLong((String)resultMap.get(VIEW)))
-                .like_count(Long.parseLong((String)resultMap.get(LIKES)))
-                .commentList(commentList)
-                .build();
+        return new PostDetailDto(header, postFooterDto);
 
     }
 
-    private void putRedis10Minute(Post post) {
+    private void putRedis10Minute(PostHeaderDto dto) {
         try {
-            String dataKey = POST_DATA.formatKey(post.getId());
-            template.opsForHash().put(dataKey, HEAD, post.getHead());
-            template.opsForHash().put(dataKey, CONTEXT, post.getContext());
-            template.opsForHash().put(dataKey, NICKNAME, post.getUser().getNickname());
-            template.opsForHash().put(dataKey, USER_ID, String.valueOf(post.getUser().getId()));
+            String dataKey = POST_DATA.formatKey(dto.getPost_id());
+            template.opsForHash().put(dataKey, HEAD, dto.getHead());
+            template.opsForHash().put(dataKey, CONTEXT, dto.getContext());
+            template.opsForHash().put(dataKey, NICKNAME, dto.getNickname());
+            template.opsForHash().put(dataKey, USER_ID, String.valueOf(dto.getUser_id()));
             template.expire(dataKey, 10, TimeUnit.MINUTES);
 
-            String statsKey = POST_STATS.formatKey(post.getId());
-            template.opsForHash().put(statsKey, VIEW, String.valueOf(post.getView()));
-            template.opsForHash().put(statsKey, LIKES,  String.valueOf(post.getLike_count()));
+            String statsKey = POST_STATS.formatKey(dto.getPost_id());
+            template.opsForHash().put(statsKey, VIEW, String.valueOf(dto.getView()));
+            template.opsForHash().put(statsKey, LIKES,  String.valueOf(dto.getLike_count()));
             template.expire(statsKey, 10, TimeUnit.MINUTES);
         }catch (Exception e){
             System.out.println(e.getMessage());
-            log.error("레디스 저장 중 에러 발생 : {}",post.getId());
+            log.error("레디스 저장 중 에러 발생 : {}",dto.getPost_id());
         }
     }
 

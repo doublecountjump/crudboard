@@ -175,83 +175,92 @@
 
 <div class="post-container">
     <div class="post-header">
-        <h1 class="post-title" th:text="${post.head}">제목</h1>
-        <div th:if="${currentUserNickname == post.user.nickname}">
-            <a th:href="@{/post/edit/{id}(id=${post.id})}" class="btn btn-primary">수정</a>
-            <button th:onclick="'deletePost(' + ${post.id} + ')'"
+        <h1 class="post-title" th:text="${header.head}">제목</h1>
+        <div th:if="${currentUserNickname == header.nickname}">
+            <a th:href="@{/post/edit/{id}(id=${header.post_id})}" class="btn btn-primary">수정</a>
+            <button th:onclick="'deletePost(' + ${header.post_id} + ')'"
                     class="delete-btn">삭제</button>
         </div>
     </div>
     <div class="post-info">
-        <span th:text="${'작성자: ' + post.user.nickname}">작성자</span>
-        <span style="margin-left: 15px;" th:text="${'조회수: ' + post.getView()}">조회수</span>
+        <span th:text="${'작성자: ' + header.nickname}">작성자</span>
+        <span style="margin-left: 15px;" th:text="${'조회수: ' + header.view}">조회수</span>
     </div>
     <div class="like-section">
-        <form th:action="@{/post/recommend/{postId}(postId=${post.id})}" method="post" style="display: inline;">
+        <form th:action="@{/post/recommend/{postId}(postId=${header.post_id})}" method="post" style="display: inline;">
             <button type="submit" class="like-btn"
                     th:classappend="${currentUserNickname != null && post.isLikedByUser(currentUserId)} ? 'liked' : ''">
             <span class="like-icon"
                   th:text="${currentUserId != null && post.isLikedByUser(currentUserId)} ? '❤️' : '🤍'"></span>
-                <span class="like-count" th:text="${post.like_count}">0</span>
+                <span class="like-count" th:text="${header.like_count}">0</span>
             </button>
         </form>
     </div>
-    <div class="post-content" th:text="${post.context}">
+    <div class="post-content" th:text="${header.context}">
         내용
     </div>
 
     <!-- 댓글 섹션 -->
     <div class="comment-section">
         <div class="comment-header">
-            댓글 <span th:text="${'(' + post.commentList.size() + ')'}"></span>
+            댓글 <span th:text="${'(' + footer.commentList.size() + ')'}"></span>
         </div>
 
         <!-- 댓글 목록 -->
         <div class="comment-list">
             <!-- 댓글이 없는 경우 -->
-            <div th:if="${post.commentList.empty}" class="comment-item">
+            <div th:if="${footer.commentList.empty}" class="comment-item">
                 작성된 댓글이 없습니다.
             </div>
 
             <!-- 댓글 있는 경우 -->
-            <div th:each="comment : ${post.commentList}" th:if="${comment.parent == null}" class="comment-item">
-                <div style="display: flex; align-items: center; justify-content: space-between;">
+            <div th:each="comment : ${footer.commentList}" class="comment-item">
+                <div th:if="${comment.isParent()}" style="display: flex; align-items: center; justify-content: space-between;">
                     <div class="comment-content" th:text="${comment.content}">댓글 내용</div>
                     <button th:if="${currentUserNickname == comment.user.nickname}"
-                            th:onclick="'deleteComment(' + ${post.id} + ',' + ${comment.id} + ')'"
+                            th:onclick="'deleteComment(' + ${header.post_id} + ',' + ${comment.id} + ')'"
                             class="delete-btn">삭제</button>
                 </div>
-                <div class="post-info" th:text="${'작성자: ' + comment.user.nickname}">댓글 작성자</div>
+                <div th:if="${comment.isParent()}" class="post-info" th:text="${'작성자: ' + comment.user.nickname}">댓글 작성자</div>
 
-                <!-- 답글 달기 버튼 -->
-                <div class="reply-toggle" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'">
+                <div th:if="${comment.isParent()}" class="reply-toggle" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'">
                     답글 달기
                 </div>
 
-                <!-- 답글 작성 폼 -->
-                <div th:id="'reply-form-' + ${comment.id}" class="reply-form">
-                    <form th:action="@{/comment/{postId}/{parentId}(postId=${post.id},parentId=${comment.id})}" method="post">
+                <div th:if="${comment.isParent()}" th:id="'reply-form-' + ${comment.id}" class="reply-form">
+                    <form th:action="@{/comment/{postId}/{parentId}(postId=${header.post_id},parentId=${comment.id})}" method="post">
                         <input type="text" name="content" class="comment-input" placeholder="답글을 입력하세요" required>
                         <button type="submit" class="comment-btn">답글 작성</button>
                     </form>
                 </div>
 
-                <!-- 대댓글 -->
+                <!-- 대댓글 (부모 댓글이 있는 경우) -->
                 <div th:each="reply : ${comment.child}" class="nested-comment">
                     <div style="display: flex; align-items: center; justify-content: space-between;">
                         <div class="comment-content" th:text="${reply.content}">대댓글 내용</div>
                         <button th:if="${currentUserNickname == reply.user.nickname}"
-                                th:onclick="'deleteComment(' + ${post.id} + ',' + ${reply.id} + ')'"
+                                th:onclick="'deleteComment(' + ${header.post_id} + ',' + ${reply.id} + ')'"
                                 class="delete-btn">삭제</button>
                     </div>
                     <div class="post-info" th:text="${'작성자: ' + reply.user.nickname}">대댓글 작성자</div>
+                </div>
+
+                <!-- 부모 댓글 없는 대댓글 -->
+                <div th:unless="${comment.isParent()}" class="nested-comment">
+                    <div style="display: flex; align-items: center; justify-content: space-between;">
+                        <div class="comment-content" th:text="${comment.content}">대댓글 내용</div>
+                        <button th:if="${currentUserNickname == comment.user.nickname}"
+                                th:onclick="'deleteComment(' + ${header.post_id} + ',' + ${comment.id} + ')'"
+                                class="delete-btn">삭제</button>
+                    </div>
+                    <div class="post-info" th:text="${'작성자: ' + comment.user.nickname}">대댓글 작성자</div>
                 </div>
             </div>
         </div>
 
         <!-- 댓글 작성 폼 -->
         <div class="comment-form">
-            <form th:action="@{/comment/{postId}(postId=${post.id})}" method="post">
+            <form th:action="@{/comment/{postId}(postId=${header.post_id})}" method="post">
                 <input type="text" name="content" class="comment-input" placeholder="댓글을 입력하세요" required>
                 <button type="submit" class="comment-btn">댓글 작성</button>
             </form>

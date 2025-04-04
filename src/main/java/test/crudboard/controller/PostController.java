@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import test.crudboard.aop.annotation.CheckResourceOwner;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.dto.CreatePostDto;
+import test.crudboard.entity.dto.PostDetailDto;
 import test.crudboard.entity.enumtype.ResourceType;
 import test.crudboard.provider.JwtUserDetails;
 import test.crudboard.service.LikeService;
@@ -47,10 +48,14 @@ public class PostController {
         return "redirect:/";
     }
 
-    @GetMapping("/{postId}")
-    public String getDetailPost(@PathVariable Long postId,@AuthenticationPrincipal JwtUserDetails user, Model model){
-        Post post = postService.getDetailPostDtoById(postId);
-        model.addAttribute("post", post);
+    @GetMapping(value = {"/{postId}/{page}","/{postId}"})
+    public String getDetailPost(@PathVariable Long postId, @PathVariable(required = false) Integer page,@AuthenticationPrincipal JwtUserDetails user, Model model){
+        if(page == null){
+            page = 1;
+        }
+        PostDetailDto dto = postService.getPostDetailDtoById(postId, page);
+        model.addAttribute("header", dto.getHeader());
+        model.addAttribute("footer", dto.getFooter());
         model.addAttribute("currentUserNickname", user != null ? user.getUsername() : null);
 
         return "post-detail";

@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import test.crudboard.entity.Post;
 import test.crudboard.entity.dto.MainTitleDto;
+import test.crudboard.entity.dto.PostHeaderDto;
+
 import java.util.Optional;
 
 public interface JpaPostRepository extends JpaRepository<Post, Long> {
@@ -15,9 +17,11 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     Page<MainTitleDto> findPostList(Pageable page);
 
     //jpa  에서 join문을 만들 때, 명시적으로 join 한 것만 join함. post의 user가 eager로 설정되어도, 지정하지 않으면  지연로딩 처리됨
-    @Query("select p from Post p left join fetch p.user left join fetch p.commentList c left join fetch c.user " +
-            "where p.id = :id")
-    Optional<Post> findPostByPostId(@Param("id") Long id);
+    @Query("select new test.crudboard.entity.dto.PostHeaderDto" +
+            "(p.id, p.head, p.context, p.view, p.like_count," +
+            "u.id,u.nickname) " +
+            "from Post p left join p.user u where p.id = :id")
+    Optional<PostHeaderDto> findPostDetailDto(@Param("id") Long id);
 
     @Query("select count(*) from Post p")
     Long getCount();

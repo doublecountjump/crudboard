@@ -20,6 +20,8 @@ import java.util.List;
 @Entity
 @Data
 @NoArgsConstructor
+@Builder
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Comment {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,6 +39,7 @@ public class Comment {
     @Column(nullable = false)
     private String content;
 
+
     @CreatedDate
     @Column(updatable = false)
     LocalDateTime created;
@@ -45,12 +48,17 @@ public class Comment {
     @JoinColumn(name = "parent_id")
     private Comment parent;
 
+    @Builder.Default
     @OneToMany(mappedBy = "parent", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @BatchSize(size = 10)
     private List<Comment> child = new ArrayList<>();
 
     private Long depth;
     boolean isParent;
+
+    public boolean isParent(){
+        return this.isParent;
+    }
 
     public Comment(Post post, User user, Comment parent){
         this.setPost(post);
@@ -79,5 +87,10 @@ public class Comment {
         user.getCommentList().add(this);
     }
 
-
+    public void addChild(Comment comment) {
+        if (!comment.isParent) {
+            this.child.add(comment);
+            comment.setParent(this);
+        }else System.out.println("!comment.isParent error");
+    }
 }
