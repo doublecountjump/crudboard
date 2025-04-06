@@ -1,17 +1,15 @@
 package test.crudboard.repository;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import test.crudboard.entity.Comment;
-import test.crudboard.entity.dto.CommentPageDto;
+import test.crudboard.domain.entity.comment.Comment;
+import test.crudboard.domain.entity.comment.dto.CommentPageDto;
 
 import java.util.List;
-import java.util.Optional;
 
 public interface JpaCommentRepository extends JpaRepository<Comment, Long> {
     boolean existsCommentByIdAndUserNickname(Long postId, String name);
@@ -26,7 +24,7 @@ public interface JpaCommentRepository extends JpaRepository<Comment, Long> {
     @Query("DELETE FROM Comment c WHERE c.id = :commentId")
     void deleteCommentById(@Param("commentId") Long commentId);
 
-    @Query("select new test.crudboard.entity.dto.CommentPageDto" +
+    @Query("select new test.crudboard.domain.entity.comment.dto.CommentPageDto" +
             "(c.id, " +         //comment
             "c.content, " +
             "c.parent.id, " +
@@ -40,4 +38,5 @@ public interface JpaCommentRepository extends JpaRepository<Comment, Long> {
             "where c.post.id = :postId " +
             "order by coalesce(c.parent.id, c.id) , c.isParent desc , c.id asc")
     Page<CommentPageDto> findCommentPageByPostId(@Param("postId") Long postId, Pageable pageRequest);
+
 }

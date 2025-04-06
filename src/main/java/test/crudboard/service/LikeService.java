@@ -4,7 +4,8 @@ package test.crudboard.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import test.crudboard.entity.Like;
+import org.springframework.transaction.annotation.Transactional;
+import test.crudboard.domain.entity.like.Like;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.repository.LikeRepository;
@@ -20,6 +21,7 @@ public class LikeService {
      * @param postId
      * @param name
      */
+    @Transactional
     public void recommendPost(Long postId, String name) {
         boolean exist = likeRepository.existsLikeByPostIdAndUserNickname(postId, name);
 

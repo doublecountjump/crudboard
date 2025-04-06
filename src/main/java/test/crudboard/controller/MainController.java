@@ -12,19 +12,14 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import test.crudboard.entity.Comment;
-import test.crudboard.entity.dto.SearchRequestDto;
-import test.crudboard.entity.dto.MainTitleDto;
-import test.crudboard.entity.dto.UserInfoDto;
-import test.crudboard.entity.dto.UserJoinDto;
-import test.crudboard.provider.JwtUserDetails;
+import test.crudboard.domain.entity.post.dto.SearchRequestDto;
+import test.crudboard.domain.entity.post.dto.MainTitleDto;
+import test.crudboard.domain.entity.user.dto.UserInfoDto;
+import test.crudboard.domain.entity.user.dto.UserJoinDto;
+import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.service.PostService;
 import test.crudboard.service.UserService;
-
-import java.util.List;
-import java.util.Objects;
-
 
 @Controller
 @Slf4j

@@ -10,12 +10,11 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import test.crudboard.aop.annotation.CheckResourceOwner;
-import test.crudboard.entity.Post;
-import test.crudboard.entity.dto.CreatePostDto;
-import test.crudboard.entity.dto.PostDetailDto;
-import test.crudboard.entity.enumtype.ResourceType;
-import test.crudboard.provider.JwtUserDetails;
+import test.crudboard.domain.aop.annotation.CheckResourceOwner;
+import test.crudboard.domain.entity.post.dto.CreatePostDto;
+import test.crudboard.domain.entity.post.dto.PostDetailDto;
+import test.crudboard.domain.entity.enumtype.ResourceType;
+import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.LikeService;
 import test.crudboard.service.PostService;
 
@@ -57,6 +56,7 @@ public class PostController {
         model.addAttribute("header", dto.getHeader());
         model.addAttribute("footer", dto.getFooter());
         model.addAttribute("currentUserNickname", user != null ? user.getUsername() : null);
+        model.addAttribute("page", page);
 
         return "post-detail";
     }

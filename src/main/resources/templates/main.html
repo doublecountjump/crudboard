@@ -170,6 +170,58 @@
             background-color: #218838;
             color: white;
         }
+        .post-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        .post-table th, .post-table td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .post-table th {
+            background-color: #f8f9fa;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .post-table .col-id {
+            width: 8%;
+        }
+
+        .post-table .col-title {
+            width: 40%;
+            text-align: left;
+        }
+
+        .post-table .col-author {
+            width: 12%;
+        }
+
+        .post-table .col-date {
+            width: 10%;
+        }
+
+        .post-table .col-view, .post-table .col-like, .post-table .col-comment {
+            width: 10%;
+        }
+
+        .post-row:hover {
+            background-color: #f8f9fa;
+        }
+
+        .post-table a {
+            color: #333;
+            text-decoration: none;
+        }
+
+        .post-table a:hover {
+            color: #007bff;
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -197,7 +249,7 @@
     <span th:unless="${username}">익명의 사용자님!</span>
 </h1>
 
-<!-- 게시글 목록 -->
+<!-- 게시글 목록을 테이블 형식으로 표시 -->
 <div class="post-list">
     <h2>게시글 목록</h2>
 
@@ -206,16 +258,33 @@
         등록된 게시글이 없습니다.
     </div>
 
-    <!-- 게시글 목록 표시 -->
-    <div th:each="title : ${titleList.getContent()}" class="post-item">
-        <a th:href="@{/post/{postId}(postId=${title.id})}" class="post-title">
-            <span th:text="${title.head}">게시글 제목</span>
-        </a>
-        <div class="post-info">
-            <span th:text="${'작성자: ' + title.name}">작성자</span>
-            <span style="margin-left: 15px;" th:text="${'조회수: ' + title.view}">조회수</span>
-        </div>
-    </div>
+    <!-- 게시글 테이블 -->
+    <table class="post-table" th:if="${!titleList.getContent().isEmpty()}">
+        <thead>
+        <tr>
+            <th class="col-id">번호</th>
+            <th class="col-title">제목</th>
+            <th class="col-author">글쓴이</th>
+            <th class="col-date">등록일</th>
+            <th class="col-view">조회</th>
+            <th class="col-like">추천</th>
+            <th class="col-comment">댓글</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="title : ${titleList.getContent()}" class="post-row">
+            <td class="col-id" th:text="${title.id}">번호</td>
+            <td class="col-title">
+                <a th:href="@{/post/{postId}(postId=${title.id})}" th:text="${title.head}">게시글 제목</a>
+            </td>
+            <td class="col-author" th:text="${title.name}">작성자</td>
+            <td class="col-date" th:text="${#temporals.format(title.created, 'HH:mm')}">등록일</td>
+            <td class="col-view" th:text="${title.view}">조회수</td>
+            <td class="col-like" th:text="${title.likeCount}">추천</td>
+            <td class="col-comment" th:text="${title.commentCount}">댓글</td>
+        </tr>
+        </tbody>
+    </table>
 </div>
 
 <!-- 검색 폼 -->

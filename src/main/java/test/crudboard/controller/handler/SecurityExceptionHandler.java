@@ -7,7 +7,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import test.crudboard.error.TokenExpiredException;
+import test.crudboard.domain.error.TokenExpiredException;
 
 @ControllerAdvice
 public class SecurityExceptionHandler {

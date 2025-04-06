@@ -9,11 +9,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import test.crudboard.entity.User;
-import test.crudboard.entity.dto.UserInfoDto;
-import test.crudboard.entity.dto.UserJoinDto;
-import test.crudboard.entity.enumtype.AuthProvider;
-import test.crudboard.entity.enumtype.Roles;
+import test.crudboard.domain.entity.user.User;
+import test.crudboard.domain.entity.user.dto.UserInfoDto;
+import test.crudboard.domain.entity.user.dto.UserJoinDto;
+import test.crudboard.domain.entity.enumtype.AuthProvider;
+import test.crudboard.domain.entity.enumtype.Roles;
 import test.crudboard.repository.JpaUserRepository;
 
 @Service

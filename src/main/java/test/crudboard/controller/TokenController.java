@@ -7,9 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import test.crudboard.entity.Token;
+import test.crudboard.domain.entity.token.Token;
 import test.crudboard.service.JwtService;
 import test.crudboard.service.RefreshTokenService;
 

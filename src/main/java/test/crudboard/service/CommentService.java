@@ -9,11 +9,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import test.crudboard.entity.Comment;
-import test.crudboard.entity.Post;
-import test.crudboard.entity.User;
-import test.crudboard.entity.dto.CommentPageDto;
-import test.crudboard.entity.dto.PostFooterDto;
+import test.crudboard.domain.entity.comment.Comment;
+import test.crudboard.domain.entity.post.Post;
+import test.crudboard.domain.entity.user.User;
+import test.crudboard.domain.entity.comment.dto.CommentPageDto;
+import test.crudboard.domain.entity.comment.dto.PostFooterDto;
 import test.crudboard.repository.JpaCommentRepository;
 import test.crudboard.repository.JpaPostRepository;
 
@@ -110,9 +110,8 @@ public class CommentService {
 
 
     private void setPageInfo(int page, int totalPage, PostFooterDto dto) {
-
         int pageSize = 10; // 한 블록에 보여줄 페이지 수
-        int currentBlock = (int) Math.ceil(page / pageSize);
+        int currentBlock = (int) Math.ceil((double) page / pageSize);
         int startPage = (currentBlock - 1) * pageSize + 1;
         int endPage = Math.min(startPage + pageSize - 1, totalPage);
 

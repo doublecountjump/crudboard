@@ -10,9 +10,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import test.crudboard.entity.Post;
-import test.crudboard.entity.User;
-import test.crudboard.entity.dto.*;
+import test.crudboard.domain.entity.comment.dto.PostFooterDto;
+import test.crudboard.domain.entity.post.Post;
+import test.crudboard.domain.entity.post.dto.CreatePostDto;
+import test.crudboard.domain.entity.post.dto.MainTitleDto;
+import test.crudboard.domain.entity.post.dto.PostDetailDto;
+import test.crudboard.domain.entity.post.dto.PostHeaderDto;
+import test.crudboard.domain.entity.user.User;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import org.springframework.data.domain.PageRequest;
@@ -24,8 +28,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static test.crudboard.type.RedisField.*;
-import static test.crudboard.type.RedisKeyType.*;
+import static test.crudboard.domain.type.RedisField.*;
+import static test.crudboard.domain.type.RedisKeyType.*;
 
 
 /**
@@ -59,15 +63,16 @@ public class  PostService{
             template.opsForHash().put(dataKey,HEAD, save.getHead());
             template.opsForHash().put(dataKey,CONTEXT, save.getContext());
             template.opsForHash().put(dataKey,NICKNAME, user.getNickname());
-            template.opsForHash().put(dataKey,USER_ID,user.getId());
+            template.opsForHash().put(dataKey,USER_ID,String.valueOf(user.getId()));
             template.expire(dataKey, 1, TimeUnit.HOURS);
 
             String statsKey = POST_STATS.formatKey(save.getId());
-            template.opsForHash().put(statsKey,VIEW,"0");
-            template.opsForHash().put(statsKey,LIKES,"0");
+            template.opsForHash().put(statsKey,VIEW,String.valueOf(0L));
+            template.opsForHash().put(statsKey,LIKES,String.valueOf(0L));
             template.expire(statsKey, 1, TimeUnit.HOURS);
 
         }catch (Exception e){
+            System.out.println(e.getMessage());
             log.error("Redis Save Error");
         }
 
@@ -84,17 +89,16 @@ public class  PostService{
      */
     public Page<MainTitleDto> getTitleList(Integer page){
         PageRequest created = PageRequest.of(page - 1, 20, Sort.by("created").descending());
-        Page<MainTitleDto> postList = postRepository.findPostList(created);
 
+        Page<MainTitleDto> postList = postRepository.findPostList(created);
         try {
             for (MainTitleDto mainTitleDto : postList) {
                 String key = POST_STATS.formatKey(mainTitleDto.getId());
-                Long view = (Long) template.opsForHash().get(key,VIEW);
-
-                if(view == null){
+                Object v = template.opsForHash().get(key, VIEW);
+                if(v == null){
                     continue;
                 }
-
+                Long view =  Long.parseLong((String)v);
                 mainTitleDto.setView(view);
             }
         }catch (Exception e){

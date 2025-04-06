@@ -12,23 +12,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.WebUtils;
-import test.crudboard.entity.Token;
-import test.crudboard.entity.User;
-import test.crudboard.error.ErrorCode;
-import test.crudboard.error.TokenExpiredException;
-import test.crudboard.repository.JpaUserRepository;
-import test.crudboard.repository.TokenRepository;
+import test.crudboard.domain.entity.user.User;
+import test.crudboard.domain.error.ErrorCode;
+import test.crudboard.domain.error.TokenExpiredException;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Date;
 
 @Service

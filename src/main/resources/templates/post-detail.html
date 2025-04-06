@@ -120,6 +120,40 @@
             display: inline-block;
             margin-right: 10px; /* 수정: 오른쪽 마진 추가 */
         }
+        .comment-pagination {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .pagination {
+            display: inline-block;
+        }
+
+        .page-link {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 0 3px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            color: #007bff;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .page-link:hover {
+            background-color: #f8f9fa;
+        }
+
+        .current-page {
+            display: inline-block;
+            padding: 5px 10px;
+            margin: 0 3px;
+            border: 1px solid #007bff;
+            border-radius: 3px;
+            background-color: #007bff;
+            color: white;
+            font-size: 14px;
+        }
     </style>
     <script>
         function toggleReplyForm(commentId) {
@@ -188,10 +222,8 @@
     </div>
     <div class="like-section">
         <form th:action="@{/post/recommend/{postId}(postId=${header.post_id})}" method="post" style="display: inline;">
-            <button type="submit" class="like-btn"
-                    th:classappend="${currentUserNickname != null && post.isLikedByUser(currentUserId)} ? 'liked' : ''">
-            <span class="like-icon"
-                  th:text="${currentUserId != null && post.isLikedByUser(currentUserId)} ? '❤️' : '🤍'"></span>
+            <button type="submit" class="like-btn">
+                <span class="like-icon">❤️</span>
                 <span class="like-count" th:text="${header.like_count}">0</span>
             </button>
         </form>
@@ -255,6 +287,29 @@
                     </div>
                     <div class="post-info" th:text="${'작성자: ' + comment.user.nickname}">대댓글 작성자</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- 댓글 페이지네이션 -->
+        <div class="comment-pagination" th:if="${footer.commentList != null && !footer.commentList.isEmpty()}">
+            <div class="pagination">
+                <!-- 처음 페이지로 -->
+                <a th:if="${page > 1}" th:href="@{/post/{postId}/1(postId=${header.post_id})}" class="page-link">&laquo; 처음</a>
+
+                <!-- 이전 페이지로 -->
+                <a th:if="${page > 1}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${page - 1})}" class="page-link">&lt; 이전</a>
+
+                <!-- 페이지 번호 -->
+                <span th:each="i : ${#numbers.sequence(footer.startPage, footer.endPage)}">
+                <a th:if="${i != page}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${i})}" class="page-link" th:text="${i}"></a>
+                <span th:if="${i == page}" class="current-page" th:text="${i}"></span>
+            </span>
+
+                <!-- 다음 페이지로 -->
+                <a th:if="${page < footer.endPage}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${page + 1})}" class="page-link">다음 &gt;</a>
+
+                <!-- 마지막 페이지로 -->
+                <a th:if="${page < footer.endPage}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${footer.endPage})}" class="page-link">마지막 &raquo;</a>
             </div>
         </div>
 

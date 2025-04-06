@@ -7,9 +7,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import test.crudboard.aop.annotation.CheckResourceOwner;
-import test.crudboard.entity.enumtype.ResourceType;
-import test.crudboard.provider.JwtUserDetails;
+import test.crudboard.domain.aop.annotation.CheckResourceOwner;
+import test.crudboard.domain.entity.enumtype.ResourceType;
+import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.CommentService;
 
 @Controller
