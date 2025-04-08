@@ -4,67 +4,26 @@
     <meta charset="UTF-8">
     <title>게시글 상세</title>
     <style>
-        .like-section {
-            margin: 15px 0;
-        }
-        .like-btn {
-            padding: 8px 16px;
-            border: 1px solid #ddd;
-            border-radius: 20px;
-            background-color: white;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .like-btn:hover {
-            background-color: #f8f8f8;
-        }
-        .like-btn.liked {
-            background-color: #ffebee;
-            border-color: #ff4081;
-        }
-        .like-count {
-            margin-left: 5px;
-            font-weight: bold;
-        }
-        .post-container, .comment-container {
-            width: 80%;
-            margin: 20px auto;
-            padding: 20px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        .post-title {
-            font-size: 24px;
-            margin-bottom: 10px;
-            margin-right: auto; /* 수정: 제목을 왼쪽에 배치하고 남은 공간을 오른쪽으로 밀어냄 */
-        }
-        .post-info {
-            color: #666;
-            margin-bottom: 20px;
-        }
-        .post-content {
-            margin-top: 20px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 30px;
-        }
         .comment-section {
             margin-top: 40px;
         }
+
         .comment-list {
             border-bottom: 2px solid #ddd;
             padding-bottom: 20px;
             margin-bottom: 20px;
         }
+
         .comment-form {
             margin: 20px 0;
         }
+
         .comment-input {
             width: 85%;
             padding: 10px;
             margin-right: 10px;
         }
+
         .comment-btn {
             padding: 10px 20px;
             background-color: #007bff;
@@ -73,33 +32,41 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
         .comment-item {
             padding: 10px;
             border-bottom: 1px solid #eee;
             margin-bottom: 10px;
         }
+
         .reply-form {
             margin-left: 30px;
             margin-top: 10px;
             display: none;
         }
+
         .reply-toggle {
             color: #007bff;
             cursor: pointer;
             margin-top: 5px;
             font-size: 0.9em;
         }
+
         .nested-comment {
             margin-left: 30px;
             border-left: 2px solid #eee;
             padding-left: 10px;
+            margin-top: 10px;
+            background-color: #f9f9f9;
         }
+
         .comment-header {
             font-size: 18px;
             margin-bottom: 20px;
             padding-bottom: 10px;
             border-bottom: 1px solid #eee;
         }
+
         .delete-btn {
             background-color: #dc3545;
             color: white;
@@ -108,51 +75,53 @@
             border-radius: 4px;
             cursor: pointer;
             margin-left: 10px;
-            float: right; /* 수정: 버튼을 오른쪽으로 배치 */
+            float: right;
         }
-        .post-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
+
         .comment-content {
             display: inline-block;
-            margin-right: 10px; /* 수정: 오른쪽 마진 추가 */
+            margin-right: 10px;
         }
-        .comment-pagination {
-            margin: 20px 0;
+
+        .hidden {
+            display: none;
+        }
+
+        .load-more-container {
             text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            border-bottom: 1px dashed #eee;
         }
 
-        .pagination {
-            display: inline-block;
-        }
-
-        .page-link {
-            display: inline-block;
-            padding: 5px 10px;
-            margin: 0 3px;
-            border: 1px solid #ddd;
-            border-radius: 3px;
-            color: #007bff;
-            text-decoration: none;
-            font-size: 14px;
-        }
-
-        .page-link:hover {
+        .load-more-btn {
             background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #007bff;
+            font-weight: bold;
         }
 
-        .current-page {
-            display: inline-block;
-            padding: 5px 10px;
-            margin: 0 3px;
-            border: 1px solid #007bff;
-            border-radius: 3px;
-            background-color: #007bff;
-            color: white;
-            font-size: 14px;
+        .load-more-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .parent-comment {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .child-comment {
+            margin-top: 5px;
+            margin-bottom: 5px;
+        }
+
+        .post-info {
+            color: #666;
+            margin-bottom: 10px;
         }
     </style>
     <script>
@@ -199,6 +168,32 @@
                     .catch(() => alert('삭제 중 오류가 발생했습니다.'));
             }
         }
+        function toggleCommentGroup(groupNumber) {
+            const comments = document.querySelectorAll('.comment-group-' + groupNumber);
+            const button = document.getElementById('load-more-btn-' + groupNumber);
+
+            // 숨기기/보이기 토글
+            let isHidden = false;
+            comments.forEach(comment => {
+                if (comment.classList.contains('hidden')) {
+                    comment.classList.remove('hidden');
+                    isHidden = false;
+                } else {
+                    comment.classList.add('hidden');
+                    isHidden = true;
+                }
+            });
+
+            // 버튼 텍스트 변경
+            const startIndex = (groupNumber - 1) * 50 + 1;
+            const endIndex = groupNumber * 50;
+
+            if (isHidden) {
+                button.textContent = '더보기 (' + startIndex + '-' + endIndex + ')';
+            } else {
+                button.textContent = '접기 (' + startIndex + '-' + endIndex + ')';
+            }
+        }
     </script>
 </head>
 <body>
@@ -232,94 +227,56 @@
         내용
     </div>
 
-    <!-- 댓글 섹션 -->
-    <div class="comment-section">
-        <div class="comment-header">
-            댓글 <span th:text="${'(' + footer.commentList.size() + ')'}"></span>
+    <!-- 댓글 목록 -->
+    <div class="comment-list">
+        <!-- 댓글이 없는 경우 -->
+        <div th:if="${footer.empty}" class="comment-item">
+            작성된 댓글이 없습니다.
         </div>
 
-        <!-- 댓글 목록 -->
-        <div class="comment-list">
-            <!-- 댓글이 없는 경우 -->
-            <div th:if="${footer.commentList.empty}" class="comment-item">
-                작성된 댓글이 없습니다.
-            </div>
-
-            <!-- 댓글 있는 경우 -->
-            <div th:each="comment : ${footer.commentList}" class="comment-item">
-                <div th:if="${comment.isParent()}" style="display: flex; align-items: center; justify-content: space-between;">
+        <!-- 댓글 있는 경우 - 모두 표시 -->
+        <div th:each="comment : ${footer}" class="comment-item">
+            <!-- 부모 댓글 스타일 -->
+            <div th:if="${comment.isParent()}" class="parent-comment">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
                     <div class="comment-content" th:text="${comment.content}">댓글 내용</div>
                     <button th:if="${currentUserNickname == comment.user.nickname}"
                             th:onclick="'deleteComment(' + ${header.post_id} + ',' + ${comment.id} + ')'"
                             class="delete-btn">삭제</button>
                 </div>
-                <div th:if="${comment.isParent()}" class="post-info" th:text="${'작성자: ' + comment.user.nickname}">댓글 작성자</div>
+                <div class="post-info" th:text="${'작성자: ' + comment.user.nickname + ' | ' + #temporals.format(comment.created, 'yyyy-MM-dd HH:mm')}">댓글 작성자</div>
 
-                <div th:if="${comment.isParent()}" class="reply-toggle" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'">
+                <div class="reply-toggle" th:onclick="'toggleReplyForm(' + ${comment.id} + ')'">
                     답글 달기
                 </div>
 
-                <div th:if="${comment.isParent()}" th:id="'reply-form-' + ${comment.id}" class="reply-form">
+                <div th:id="'reply-form-' + ${comment.id}" class="reply-form">
                     <form th:action="@{/comment/{postId}/{parentId}(postId=${header.post_id},parentId=${comment.id})}" method="post">
                         <input type="text" name="content" class="comment-input" placeholder="답글을 입력하세요" required>
                         <button type="submit" class="comment-btn">답글 작성</button>
                     </form>
                 </div>
+            </div>
 
-                <!-- 대댓글 (부모 댓글이 있는 경우) -->
-                <div th:each="reply : ${comment.child}" class="nested-comment">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div class="comment-content" th:text="${reply.content}">대댓글 내용</div>
-                        <button th:if="${currentUserNickname == reply.user.nickname}"
-                                th:onclick="'deleteComment(' + ${header.post_id} + ',' + ${reply.id} + ')'"
-                                class="delete-btn">삭제</button>
-                    </div>
-                    <div class="post-info" th:text="${'작성자: ' + reply.user.nickname}">대댓글 작성자</div>
+            <!-- 자식 댓글(대댓글) 스타일 -->
+            <div th:unless="${comment.isParent()}" class="child-comment nested-comment">
+                <div style="display: flex; align-items: center; justify-content: space-between;">
+                    <div class="comment-content" th:text="${comment.content}">대댓글 내용</div>
+                    <button th:if="${currentUserNickname == comment.user.nickname}"
+                            th:onclick="'deleteComment(' + ${header.post_id} + ',' + ${comment.id} + ')'"
+                            class="delete-btn">삭제</button>
                 </div>
-
-                <!-- 부모 댓글 없는 대댓글 -->
-                <div th:unless="${comment.isParent()}" class="nested-comment">
-                    <div style="display: flex; align-items: center; justify-content: space-between;">
-                        <div class="comment-content" th:text="${comment.content}">대댓글 내용</div>
-                        <button th:if="${currentUserNickname == comment.user.nickname}"
-                                th:onclick="'deleteComment(' + ${header.post_id} + ',' + ${comment.id} + ')'"
-                                class="delete-btn">삭제</button>
-                    </div>
-                    <div class="post-info" th:text="${'작성자: ' + comment.user.nickname}">대댓글 작성자</div>
-                </div>
+                <div class="post-info" th:text="${'작성자: ' + comment.user.nickname + ' | ' + #temporals.format(comment.created, 'yyyy-MM-dd HH:mm')}">대댓글 작성자</div>
             </div>
         </div>
+    </div>
 
-        <!-- 댓글 페이지네이션 -->
-        <div class="comment-pagination" th:if="${footer.commentList != null && !footer.commentList.isEmpty()}">
-            <div class="pagination">
-                <!-- 처음 페이지로 -->
-                <a th:if="${page > 1}" th:href="@{/post/{postId}/1(postId=${header.post_id})}" class="page-link">&laquo; 처음</a>
-
-                <!-- 이전 페이지로 -->
-                <a th:if="${page > 1}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${page - 1})}" class="page-link">&lt; 이전</a>
-
-                <!-- 페이지 번호 -->
-                <span th:each="i : ${#numbers.sequence(footer.startPage, footer.endPage)}">
-                <a th:if="${i != page}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${i})}" class="page-link" th:text="${i}"></a>
-                <span th:if="${i == page}" class="current-page" th:text="${i}"></span>
-            </span>
-
-                <!-- 다음 페이지로 -->
-                <a th:if="${page < footer.endPage}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${page + 1})}" class="page-link">다음 &gt;</a>
-
-                <!-- 마지막 페이지로 -->
-                <a th:if="${page < footer.endPage}" th:href="@{/post/{postId}/{page}(postId=${header.post_id}, page=${footer.endPage})}" class="page-link">마지막 &raquo;</a>
-            </div>
-        </div>
-
-        <!-- 댓글 작성 폼 -->
-        <div class="comment-form">
-            <form th:action="@{/comment/{postId}(postId=${header.post_id})}" method="post">
-                <input type="text" name="content" class="comment-input" placeholder="댓글을 입력하세요" required>
-                <button type="submit" class="comment-btn">댓글 작성</button>
-            </form>
-        </div>
+    <!-- 댓글 작성 폼 -->
+    <div class="comment-form">
+        <form th:action="@{/comment/{postId}(postId=${header.post_id})}" method="post">
+            <input type="text" name="content" class="comment-input" placeholder="댓글을 입력하세요" required>
+            <button type="submit" class="comment-btn">댓글 작성</button>
+        </form>
     </div>
 </div>
 </body>

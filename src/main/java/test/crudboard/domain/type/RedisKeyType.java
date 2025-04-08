@@ -3,9 +3,8 @@ package test.crudboard.domain.type;
 
 
 public enum RedisKeyType {
-    POST_DATA("post:%d:data"),
-    POST_STATS("post:%d:stats"),
-    POST_ALL("post:%d:*");
+    HOT_POST_DATA("hot_post:%d"),
+    HOT_POST_LIST("hot_post_set");
 
     private final String key;
     RedisKeyType(String key){

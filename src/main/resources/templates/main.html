@@ -273,15 +273,15 @@
         </thead>
         <tbody>
         <tr th:each="title : ${titleList.getContent()}" class="post-row">
-            <td class="col-id" th:text="${title.id}">번호</td>
+            <td class="col-id" th:text="${title.post_id}">번호</td>
             <td class="col-title">
-                <a th:href="@{/post/{postId}(postId=${title.id})}" th:text="${title.head}">게시글 제목</a>
+                <a th:href="@{/post/{postId}(postId=${title.post_id})}" th:text="${title.head}">게시글 제목</a>
             </td>
-            <td class="col-author" th:text="${title.name}">작성자</td>
+            <td class="col-author" th:text="${title.nickname}">작성자</td>
             <td class="col-date" th:text="${#temporals.format(title.created, 'HH:mm')}">등록일</td>
             <td class="col-view" th:text="${title.view}">조회수</td>
-            <td class="col-like" th:text="${title.likeCount}">추천</td>
-            <td class="col-comment" th:text="${title.commentCount}">댓글</td>
+            <td class="col-like" th:text="${title.like_count}">추천</td>
+            <td class="col-comment" th:text="${title.comment_count}">댓글</td>
         </tr>
         </tbody>
     </table>

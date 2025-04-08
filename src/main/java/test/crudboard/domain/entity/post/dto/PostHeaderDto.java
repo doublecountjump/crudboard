@@ -5,6 +5,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 
 @Getter
 @Setter
@@ -15,8 +17,9 @@ public class PostHeaderDto {
     private String head;
     private String context;
     private Long view;
+    private LocalDateTime created;
     private Long like_count;
+    private Long comment_count;
 
-    private Long user_id;
     private String nickname;
 }

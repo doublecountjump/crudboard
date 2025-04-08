@@ -48,8 +48,8 @@ public class Comment {
     private Comment parent;
 
     @Builder.Default
-    @OneToMany(mappedBy = "parent", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @BatchSize(size = 10)
+    @OneToMany(mappedBy = "parent", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @BatchSize(size = 100)
     private List<Comment> child = new ArrayList<>();
 
     private Long depth;

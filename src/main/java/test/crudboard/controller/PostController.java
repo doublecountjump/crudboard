@@ -47,16 +47,15 @@ public class PostController {
         return "redirect:/";
     }
 
-    @GetMapping(value = {"/{postId}/{page}","/{postId}"})
-    public String getDetailPost(@PathVariable Long postId, @PathVariable(required = false) Integer page,@AuthenticationPrincipal JwtUserDetails user, Model model){
-        if(page == null){
-            page = 1;
-        }
-        PostDetailDto dto = postService.getPostDetailDtoById(postId, page);
+    @GetMapping("/{postId}")
+    public String getDetailPost(@PathVariable Long postId,
+                                @RequestParam(value = "isrecommend", required = false, defaultValue = "false") boolean isRecommend,
+                                @AuthenticationPrincipal JwtUserDetails user, Model model){
+
+        PostDetailDto dto = postService.getPostDetailDtoById(postId, isRecommend);
         model.addAttribute("header", dto.getHeader());
-        model.addAttribute("footer", dto.getFooter());
+        model.addAttribute("footer", dto.getCommentList());
         model.addAttribute("currentUserNickname", user != null ? user.getUsername() : null);
-        model.addAttribute("page", page);
 
         return "post-detail";
     }

@@ -6,8 +6,6 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import test.crudboard.domain.entity.comment.Comment;
 import test.crudboard.domain.entity.post.Post;
@@ -50,15 +48,8 @@ public class CommentService {
         return commentRepository.save(child);
     }
 
-    public PostFooterDto getCommentListDto(Long postId, Integer page){
-        PageRequest pageRequest = PageRequest.of(page - 1, 20, Sort.by("created").ascending());
-        Page<CommentPageDto> commentList = commentRepository.findCommentPageByPostId(postId, pageRequest);
-
-        PostFooterDto responseDto = new PostFooterDto();
-        responseDto.setCommentList(convertDtoToList(commentList));
-        setPageInfo(page, commentList.getTotalPages(), responseDto);
-
-        return responseDto;
+    public List<Comment> getCommentList(Long postId){
+        return commentRepository.findCommentsByPostId(postId);
     }
 
     /**

@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.entity.post.dto.SearchRequestDto;
 import test.crudboard.domain.entity.post.dto.MainTitleDto;
 import test.crudboard.domain.entity.user.dto.UserInfoDto;
@@ -30,6 +31,7 @@ public class MainController {
     private final JpaUserRepository userRepository;
     @GetMapping(value = {"","/","/{page}"})
     public String home(@AuthenticationPrincipal JwtUserDetails userDetails, Model model,
+                       @RequestParam(value = "isrecommend", required = false, defaultValue = "false") boolean isRecommend,
                        @PathVariable(required = false) Integer page){
         if(page == null){
             page = 1;
@@ -38,7 +40,7 @@ public class MainController {
         if(userDetails != null){
             model.addAttribute("username", userDetails.getUsername());
         }
-        Page<MainTitleDto> titleList = postService.getTitleList(page);
+        Page<PostHeaderDto> titleList = postService.getTitleList(page,isRecommend);
 
         int totalPages = titleList.getTotalPages();
         int pageSize = 10; // 한 블록에 보여줄 페이지 수
@@ -84,7 +86,7 @@ public class MainController {
     public String searchPost(@Valid @ModelAttribute SearchRequestDto search, @AuthenticationPrincipal JwtUserDetails user, Model model){
         int page = search.getPage();
         String text = search.getContent();
-        Page<MainTitleDto> titleDto = switch (search.getType()){
+        Page<PostHeaderDto> titleDto = switch (search.getType()){
             case HEAD ->  postService.searchPostByHead(text, PageRequest.of(page - 1,5, Sort.by("created").descending()));
             case HEAD_CONTENT ->  postService.searchPostByHeadOrContent(text, PageRequest.of(page - 1,5, Sort.by("created").descending()));
             case NICKNAME ->  postService.searchPostByNickname(text, PageRequest.of(page - 1,5, Sort.by("created").descending()));
