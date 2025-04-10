@@ -14,6 +14,7 @@ import test.crudboard.domain.entity.post.dto.CreatePostDto;
 import test.crudboard.domain.entity.post.dto.PostDetailDto;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.entity.user.User;
+import test.crudboard.domain.error.CacheNotFoundException;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import org.springframework.data.domain.PageRequest;
@@ -36,6 +37,7 @@ import static test.crudboard.domain.type.RedisKeyType.*;
 public class  PostService{
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
+    private final RedisService redisService;
     private final CommentService commentService;
     private final RedisTemplate<String, String> template;
 
@@ -53,6 +55,7 @@ public class  PostService{
         post.setUser(user);
         Post save = postRepository.save(post);
 
+        redisService.saveHeader(save);
         return save;
     }
 
@@ -61,63 +64,9 @@ public class  PostService{
      * @param page 가져오고자 하는 페이지
      */
     public Page<PostHeaderDto> getTitleList(Integer page, boolean isRecommend){
-        int pageSize = 20;
-        long start = (long) (page - 1) * pageSize;
-        long end = start + pageSize - 1;
 
-        if (isRecommend) {
-            Long total = template.opsForZSet().zCard(HOT_POST_LIST.toString());
-            List<PostHeaderDto> headerDtoList = new ArrayList<>();
-            if(total == null){
-                return new PageImpl<>(
-                        headerDtoList,
-                        PageRequest.of(page - 1, pageSize), // 페이지는 0부터 시작하므로 page-1
-                        0
-                );
-            }
-
-            Set<String> idList = template.opsForZSet().reverseRange(HOT_POST_LIST.toString(), start, end);
-            for (String sId : idList) {
-                Long id = Long.parseLong(sId);
-                Map<String, Object> result = template.opsForHash().entries(HOT_POST_LIST.formatKey(id))
-                        .entrySet().stream()
-                        .collect(Collectors.toMap(
-                                key -> (String) key.getKey(),
-                                Map.Entry::getValue
-                        ));
-                PostHeaderDto postHeaderDto = getPostHeaderDto(id, result);
-                headerDtoList.add(postHeaderDto);
-            }
-
-            // PageImpl 객체 생성하여 반환
-            // 매개변수: 콘텐츠 리스트, 페이지 정보(PageRequest), 총 요소 수
-            return new PageImpl<>(
-                    headerDtoList,
-                    PageRequest.of(page - 1, pageSize), // 페이지는 0부터 시작하므로 page-1
-                    total
-            );
-        }
-
-        PageRequest created = PageRequest.of(page - 1, 20, Sort.by("created").descending());
+        PageRequest created = PageRequest.of(page - 1, 20);
         Page<PostHeaderDto> postList = postRepository.findPostList(created);
-
-        try {
-            for (PostHeaderDto dto : postList) {
-                Long id = dto.getPost_id();
-
-                Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(id), id.toString());
-                Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
-
-                Object likeObj = template.opsForHash().get(POST_LIKE_COUNT.formatKey(id), id.toString());
-                Long like = (likeObj != null) ? Long.parseLong(likeObj.toString()) : 0L;
-
-                dto.setView(view);
-                dto.setLike_count(like);
-            }
-        }catch (Exception e){
-            System.out.println(e.getMessage());
-            log.error("[getTitleList] Redis Error");
-        }
 
         return postList;
     }
@@ -149,14 +98,21 @@ public class  PostService{
             return new PostDetailDto(header,list);
         }
 
-        PostHeaderDto header = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
-        template.opsForHash().increment(POST_VIEW_COUNT.formatKey(postId),postId.toString(),1);
+        PostHeaderDto header;
+        try{
+            header = redisService.getHeaderDto(postId);
+        }
+        catch (CacheNotFoundException e) {
+            log.warn("[{}] {}",postId,e.getErrorCode().getMessage());
+            header = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+        }
+            template.opsForHash().increment(POST_VIEW_COUNT.formatKey(postId), postId.toString(), 1);
 
-        Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(postId), postId.toString());
-        Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
-        header.setView(view);
+            Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(postId), postId.toString());
+            Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
+            header.setView(view);
 
-        return new PostDetailDto(header, list);
+            return new PostDetailDto(header, list);
 
     }
 
@@ -180,7 +136,6 @@ public class  PostService{
         log.info("Delete Post! id : {}", id);
     }
 
-
     public Page<PostHeaderDto> searchPostByHead(String text, PageRequest created) {
         return postRepository.findMainTitleDtoByPostHead(text, created);
     }
@@ -189,11 +144,9 @@ public class  PostService{
         return postRepository.findMainTitleDtoByPostHeadOrPostContent(text, created);
     }
 
-
     public Page<PostHeaderDto> searchPostByNickname(String text, PageRequest created) {
         return postRepository.findMainTitleDtoByUserNickname(text, created);
     }
-
 
 
     private static PostHeaderDto getPostHeaderDto(Long postId, Map<String, Object> resultMap) {

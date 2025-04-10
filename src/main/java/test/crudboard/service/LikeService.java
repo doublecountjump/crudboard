@@ -1,7 +1,6 @@
 package test.crudboard.service;
 
 
-import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,16 +22,14 @@ public class LikeService {
      */
     @Transactional
     public void recommendPost(Long postId, String name) {
-        boolean exist = likeRepository.existsLikeByPostIdAndUserNickname(postId, name);
+        boolean exist = likeRepository.existsLikeByPost_idAndNickname(postId, name);
 
         if(exist){
             likeRepository.deleteLikeByPostIdAndUserNickname(postId, name);
         }else{
-            Like like = Like.builder()
-                    .user(userRepository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException("user not found")))
-                    .post(postRepository.findById(postId).orElseThrow(()-> new EntityNotFoundException("post not found")))
-                    .build();
-
+            Like like = new Like();
+            like.setPost_id(postId);
+            like.setNickname(name);
             likeRepository.save(like);
         }
     }

@@ -46,18 +46,6 @@ public class Post {
     @OneToMany(mappedBy = "post",fetch = FetchType.EAGER,cascade = CascadeType.ALL,orphanRemoval = true)
     private List<Comment> commentList = new ArrayList<>();
 
-    @OneToMany(mappedBy = "post",fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Like> likeList = new ArrayList<>();
-
-
-
-    public boolean isLikedByUser(String name) {
-        if(name == null) return false;
-        return likeList.stream()
-                .anyMatch(like -> like.getUser().getNickname().equals(name));
-
-    }
-
     public void setUser(User user){
         this.user = user;
         user.getPostList().add(this);
