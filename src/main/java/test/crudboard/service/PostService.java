@@ -104,18 +104,13 @@ public class  PostService{
         try {
             for (PostHeaderDto dto : postList) {
                 Long id = dto.getPost_id();
-                String vkey = POST_VIEW_COUNT.formatKey(id);
-                String lkey = POST_LIKE_COUNT.formatKey(id);
 
-                Long view = (Long)template.opsForHash().get(vkey, String.valueOf(id));
-                Long like = (Long)template.opsForHash().get(lkey, String.valueOf(id));
+                Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(id), id.toString());
+                Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
 
-                if(view == null){
-                    view = 0L;
-                }
-                if(like == null){
-                    like = 0L;
-                }
+                Object likeObj = template.opsForHash().get(POST_LIKE_COUNT.formatKey(id), id.toString());
+                Long like = (likeObj != null) ? Long.parseLong(likeObj.toString()) : 0L;
+
                 dto.setView(view);
                 dto.setLike_count(like);
             }
@@ -155,20 +150,14 @@ public class  PostService{
         }
 
         PostHeaderDto header = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+        template.opsForHash().increment(POST_VIEW_COUNT.formatKey(postId),postId.toString(),1);
+
+        Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(postId), postId.toString());
+        Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
+        header.setView(view);
+
         return new PostDetailDto(header, list);
 
-    }
-
-    private static PostHeaderDto getPostHeaderDto(Long postId, Map<String, Object> resultMap) {
-        PostHeaderDto header = new PostHeaderDto();
-        header.setPost_id(postId);
-        header.setHead((String) resultMap.get(HEAD));
-        header.setContext((String) resultMap.get(CONTEXT));
-        header.setView(Long.parseLong((String)resultMap.get(VIEW)));
-        header.setLike_count(Long.parseLong((String)resultMap.get(LIKES)));
-        header.setComment_count(Long.parseLong((String)resultMap.get(COMMENTS)));
-        header.setNickname((String) resultMap.get(NICKNAME));
-        return header;
     }
 
 
@@ -203,5 +192,19 @@ public class  PostService{
 
     public Page<PostHeaderDto> searchPostByNickname(String text, PageRequest created) {
         return postRepository.findMainTitleDtoByUserNickname(text, created);
+    }
+
+
+
+    private static PostHeaderDto getPostHeaderDto(Long postId, Map<String, Object> resultMap) {
+        PostHeaderDto header = new PostHeaderDto();
+        header.setPost_id(postId);
+        header.setHead((String) resultMap.get(HEAD));
+        header.setContext((String) resultMap.get(CONTEXT));
+        header.setView(Long.parseLong((String)resultMap.get(VIEW)));
+        header.setLike_count(Long.parseLong((String)resultMap.get(LIKES)));
+        header.setComment_count(Long.parseLong((String)resultMap.get(COMMENTS)));
+        header.setNickname((String) resultMap.get(NICKNAME));
+        return header;
     }
 }
