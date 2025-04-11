@@ -65,8 +65,27 @@ public class  PostService{
      */
     public Page<PostHeaderDto> getTitleList(Integer page, boolean isRecommend){
 
-        PageRequest created = PageRequest.of(page - 1, 20);
+        PageRequest created = PageRequest.of(page - 1, 20,Sort.by("post_id").descending());
         Page<PostHeaderDto> postList = postRepository.findPostList(created);
+
+
+        try {
+            for (PostHeaderDto dto : postList) {
+                Long id = dto.getPost_id();
+
+                Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(id), id.toString());
+                Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
+
+                Object likeObj = template.opsForHash().get(POST_LIKE_COUNT.formatKey(id), id.toString());
+                Long like = (likeObj != null) ? Long.parseLong(likeObj.toString()) : 0L;
+
+                dto.setView(view);
+                dto.setLike_count(like);
+            }
+        }catch (Exception e){
+            System.out.println(e.getMessage());
+            log.error("[getTitleList] 조회수가 캐시에 존재하지 않습니다.");
+        }
 
         return postList;
     }
