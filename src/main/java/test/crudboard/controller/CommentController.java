@@ -25,7 +25,7 @@ public class CommentController {
     public String addComment(@PathVariable Long postId, String content,
                              @AuthenticationPrincipal JwtUserDetails user){
 
-        commentService.saveParentComment(postId, content, user.getUsername());
+        commentService.saveParentComment(postId, content, user.getId());
 
         return "redirect:/post/" + postId;
     }
@@ -33,7 +33,8 @@ public class CommentController {
     @PostMapping("/{postId}/{parentId}")
     public String addReplyComment(@PathVariable Long postId, @PathVariable Long parentId,
                                   String content, @AuthenticationPrincipal JwtUserDetails user){
-        commentService.saveChildComment(postId, parentId, content, user.getUsername());
+
+        commentService.saveChildComment(postId, parentId, content, user.getId());
 
         return "redirect:/post/" + postId;
     }

@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import test.crudboard.domain.entity.like.Like;
+import test.crudboard.domain.entity.post.Post;
+import test.crudboard.domain.entity.user.User;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.repository.LikeRepository;
@@ -19,18 +21,18 @@ public class LikeService {
     /**
      * 현재 사용자를 게시글의 추천자로 등록
      * @param postId
-     * @param name
+     * @param id
      */
     @Transactional
-    public void recommendPost(Long postId, String name) {
-        boolean exist = likeRepository.existsLikeByPostIdAndUserNickname(postId, name);
+    public void recommendPost(Long postId, Long userId) {
+        boolean exist = likeRepository.existsLikeByPostIdAndUserId(postId, userId);
 
         if(exist){
-            likeRepository.deleteLikeByPostIdAndUserNickname(postId, name);
+            likeRepository.deleteLikeByPostIdAndUserId(postId, userId);
         }else{
             Like like = Like.builder()
-                    .user(userRepository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException("user not found")))
-                    .post(postRepository.findById(postId).orElseThrow(()-> new EntityNotFoundException("post not found")))
+                    .user(User.Quick(userId))
+                    .post(Post.Quick(postId))
                     .build();
 
             likeRepository.save(like);

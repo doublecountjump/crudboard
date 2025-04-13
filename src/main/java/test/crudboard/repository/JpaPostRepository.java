@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import test.crudboard.domain.entity.post.Post;
-import test.crudboard.domain.entity.post.dto.MainTitleDto;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface JpaPostRepository extends JpaRepository<Post, Long> {
@@ -42,7 +42,11 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     boolean existsPostByIdAndUserNickname(Long postId, String name);
 
 
+    @Query("select p from Post p left join p.user u order by p.id desc ")
+    List<Post> findAllLimit(Pageable page);
 
+    @Query("select count(p.id) from Post p")
+    long count();
 
 /*
 

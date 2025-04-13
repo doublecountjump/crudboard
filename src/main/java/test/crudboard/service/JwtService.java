@@ -44,7 +44,8 @@ public class JwtService {
         }
 
         Claims claims = Jwts.claims();
-        claims.put("id", user.getNickname());
+        claims.put("id", user.getId());
+        claims.put("nickname", user.getNickname());
         claims.put("roles", user.getRoles().toString());
 
         return Jwts.builder()
@@ -53,7 +54,6 @@ public class JwtService {
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + (60 * 1000)))
                 .compact();
-
     }
 
     /**

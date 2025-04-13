@@ -21,16 +21,19 @@ import test.crudboard.repository.JpaUserRepository;
 @Slf4j
 @Transactional
 public class UserService {
-    private final JpaUserRepository repository;
+    private final JpaUserRepository userRepository;
     private final PasswordEncoder encoder;
+
     public User save(UserJoinDto userJoinDto){
         //사용자가 존재하는지 확인
-        if(repository.findUserByEmail(userJoinDto.getEmail()).isPresent()){
+        if(userRepository.existsUserByEmail(userJoinDto.getEmail())){
             throw new DuplicateRequestException("user already exist");
-        }//닉네임 중복 확인
-        else if(repository.findUserByNickname(userJoinDto.getNickname()).isPresent()){
+        }
+        //닉네임 중복 확인
+        else if(userRepository.existsUserByNickname(userJoinDto.getNickname())){
             throw new DuplicateRequestException("nickname exist");
         }
+
         User user = User.builder()
                 .email(userJoinDto.getEmail())
                 .password(encoder.encode(userJoinDto.getPassword()))
@@ -39,24 +42,24 @@ public class UserService {
                 .roles(Roles.ROLE_USER)
                 .build();
 
-        return repository.save(user);
+        return userRepository.save(user);
     }
 
     public User findUserByNickname(String name){
-        return repository.findUserByNickname(name).orElseThrow(()->new EntityNotFoundException("user not found"));
+        return userRepository.findUserByNickname(name).orElseThrow(()->new EntityNotFoundException("user not found"));
     }
     public User findUserByEmail(String email){
-        return repository.findUserByEmail(email)
+        return userRepository.findUserByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("user not found"));
     }
 
     public boolean isIdentification(Long userId, String name) {
-        return repository.existsUserByIdAndNickname(userId, name);
+        return userRepository.existsUserByIdAndNickname(userId, name);
     }
 
 
     public UserInfoDto getUserInfo(String name){
-        User user = repository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException());
+        User user = userRepository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException());
 
         return UserInfoDto.builder()
                 .id(user.getId())

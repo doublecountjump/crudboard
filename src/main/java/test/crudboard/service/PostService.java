@@ -1,6 +1,7 @@
 package test.crudboard.service;
 
 
+import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -12,19 +13,19 @@ import test.crudboard.domain.entity.comment.Comment;
 import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.post.dto.CreatePostDto;
 import test.crudboard.domain.entity.post.dto.PostDetailDto;
+import test.crudboard.domain.entity.post.dto.PostHeader;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.entity.user.User;
+import test.crudboard.domain.error.CacheNotFoundException;
 import test.crudboard.repository.JpaPostRepository;
-import test.crudboard.repository.JpaUserRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.util.*;import java.util.stream.Collectors;
+import java.util.*;
 
 import static test.crudboard.domain.type.RedisDataType.POST_LIKE_COUNT;
 import static test.crudboard.domain.type.RedisDataType.POST_VIEW_COUNT;
 import static test.crudboard.domain.type.RedisField.*;
-import static test.crudboard.domain.type.RedisKeyType.*;
 
 
 /**
@@ -34,24 +35,32 @@ import static test.crudboard.domain.type.RedisKeyType.*;
 @Slf4j
 @RequiredArgsConstructor
 public class  PostService{
-    private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
     private final CommentService commentService;
-    private final RedisTemplate<String, String> template;
+    private final RedisService redisService;
 
+/*    @PostConstruct
+    public void init(){
+        PageRequest pageRequest = PageRequest.of(0, 50000);
+        List<Post> allLimit200 = postRepository.findAllLimit(pageRequest);
+        for (Post post : allLimit200) {
+            redisService.savePostHeader(post);
+        }
+    }*/
     //게시글 저장
     @Transactional
-    public Post save(CreatePostDto createPostDto){
-        User user = userRepository.findUserByNickname(createPostDto.getName())
-                .orElseThrow(() -> new EntityNotFoundException("entity not found"));
+    public Post save(CreatePostDto createPostDto, Long id){
 
         Post post = Post.builder()
                 .head(createPostDto.getHead())
                 .context(createPostDto.getContext())
                 .view(0L)
                 .build();
-        post.setUser(user);
+
+        post.setUser(User.Quick(id));
         Post save = postRepository.save(post);
+
+        redisService.savePostHeader(post);
 
         return save;
     }
@@ -61,66 +70,20 @@ public class  PostService{
      * @param page 가져오고자 하는 페이지
      */
     public Page<PostHeaderDto> getTitleList(Integer page, boolean isRecommend){
-        int pageSize = 20;
-        long start = (long) (page - 1) * pageSize;
-        long end = start + pageSize - 1;
-
-        if (isRecommend) {
-            Long total = template.opsForZSet().zCard(HOT_POST_LIST.toString());
-            List<PostHeaderDto> headerDtoList = new ArrayList<>();
-            if(total == null){
-                return new PageImpl<>(
-                        headerDtoList,
-                        PageRequest.of(page - 1, pageSize), // 페이지는 0부터 시작하므로 page-1
-                        0
-                );
-            }
-
-            Set<String> idList = template.opsForZSet().reverseRange(HOT_POST_LIST.toString(), start, end);
-            for (String sId : idList) {
-                Long id = Long.parseLong(sId);
-                Map<String, Object> result = template.opsForHash().entries(HOT_POST_LIST.formatKey(id))
-                        .entrySet().stream()
-                        .collect(Collectors.toMap(
-                                key -> (String) key.getKey(),
-                                Map.Entry::getValue
-                        ));
-                PostHeaderDto postHeaderDto = getPostHeaderDto(id, result);
-                headerDtoList.add(postHeaderDto);
-            }
-
-            // PageImpl 객체 생성하여 반환
-            // 매개변수: 콘텐츠 리스트, 페이지 정보(PageRequest), 총 요소 수
-            return new PageImpl<>(
-                    headerDtoList,
-                    PageRequest.of(page - 1, pageSize), // 페이지는 0부터 시작하므로 page-1
-                    total
-            );
-        }
-
-        PageRequest created = PageRequest.of(page - 1, 20, Sort.by("created").descending());
-        Page<PostHeaderDto> postList = postRepository.findPostList(created);
+        Page<PostHeaderDto> dto;
 
         try {
-            for (PostHeaderDto dto : postList) {
-                Long id = dto.getPost_id();
-
-                Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(id), id.toString());
-                Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
-
-                Object likeObj = template.opsForHash().get(POST_LIKE_COUNT.formatKey(id), id.toString());
-                Long like = (likeObj != null) ? Long.parseLong(likeObj.toString()) : 0L;
-
-                dto.setView(view);
-                dto.setLike_count(like);
-            }
-        }catch (Exception e){
+            dto = redisService.getTitleList(page);
+        }catch (CacheNotFoundException e){
             System.out.println(e.getMessage());
             log.error("[getTitleList] Redis Error");
+            PageRequest created = PageRequest.of(page - 1, 20, Sort.by("id").descending());
+            dto = postRepository.findPostList(created);
         }
 
-        return postList;
+        return dto;
     }
+
 
     /**
      * 해당하는 id의 게시글을 가져옴
@@ -129,41 +92,22 @@ public class  PostService{
      */
     @Transactional(readOnly = true)
     public PostDetailDto getPostDetailDtoById(Long postId, boolean isRecommend){
-        List<Comment> list = commentService.getCommentList(postId);
-
-        if(isRecommend) {
-            Map<String, Object> entry = template.opsForHash().entries(HOT_POST_DATA.formatKey(postId))
-                    .entrySet().stream().collect(Collectors.toMap(
-                            key -> (String)key.getKey(),
-                            Map.Entry::getValue
-                    ));
-
-            if (entry.isEmpty()) {
-                log.warn("[{}}] 추천 게시글이 캐시에 없습니다.",postId);
-                //캐시에 없을 때 처리
-                PostHeaderDto postHeaderDto = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
-                return new PostDetailDto(postHeaderDto, list);
-            }
-
-            PostHeaderDto header = getPostHeaderDto(postId, entry);
-            return new PostDetailDto(header,list);
+        List<Comment> footer = commentService.getCommentList(postId);
+        PostHeaderDto header;
+        try{
+            PostHeader postHeader = redisService.getPostHeader(postId);
+            header = new PostHeaderDto(postHeader);
+            return new PostDetailDto(header,footer);
+        }
+        catch (CacheNotFoundException e){
+            e.getMessage();
+            log.warn("게시글이 캐시에 존재하지 않습니다.");
+            header = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
         }
 
-        PostHeaderDto header = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
-        template.opsForHash().increment(POST_VIEW_COUNT.formatKey(postId),postId.toString(),1);
-
-        Object viewObj = template.opsForHash().get(POST_VIEW_COUNT.formatKey(postId), postId.toString());
-        Long view = (viewObj != null) ? Long.parseLong(viewObj.toString()) : 0L;
-        header.setView(view);
-
-        return new PostDetailDto(header, list);
-
+        return new PostDetailDto(header, footer);
     }
 
-
-    public boolean isPostOwner(Long postId, String name){
-        return postRepository.existsPostByIdAndUserNickname(postId, name);
-    }
     @Transactional
     public Post update(Long postId, CreatePostDto postDto) {
         Post post = postRepository.findById(postId)
@@ -174,12 +118,22 @@ public class  PostService{
 
         return post;
     }
+
     @Transactional
     public void deletePost(Long id) {
         postRepository.deleteById(id);
         log.info("Delete Post! id : {}", id);
     }
 
+
+
+
+
+
+
+    public boolean isPostOwner(Long postId, String name){
+        return postRepository.existsPostByIdAndUserNickname(postId, name);
+    }
 
     public Page<PostHeaderDto> searchPostByHead(String text, PageRequest created) {
         return postRepository.findMainTitleDtoByPostHead(text, created);
@@ -189,12 +143,13 @@ public class  PostService{
         return postRepository.findMainTitleDtoByPostHeadOrPostContent(text, created);
     }
 
-
     public Page<PostHeaderDto> searchPostByNickname(String text, PageRequest created) {
         return postRepository.findMainTitleDtoByUserNickname(text, created);
     }
 
-
+    public Post findById(Long id){
+        return postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
+    }
 
     private static PostHeaderDto getPostHeaderDto(Long postId, Map<String, Object> resultMap) {
         PostHeaderDto header = new PostHeaderDto();

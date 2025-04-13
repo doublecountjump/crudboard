@@ -46,6 +46,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         //토큰 생성 후 전달
         String token = jwtService.generateToken(email);
         refreshTokenService.GenerateToken(email);
+
         Cookie cookie = new Cookie("jwt", token);
         cookie.setSecure(true);
         cookie.setMaxAge(100); // 1시간

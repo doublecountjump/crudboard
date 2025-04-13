@@ -1,5 +1,6 @@
 package test.crudboard.security.provider;
 
+import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -9,10 +10,13 @@ import java.util.Collection;
 import java.util.Collections;
 
 public class JwtUserDetails implements UserDetails {
+    @Getter
+    private final Long id;
     private final String name;
     private final Collection<? extends GrantedAuthority> authorities;
 
-    public JwtUserDetails(String name, Roles roles){
+    public JwtUserDetails(Long id,String name, Roles roles){
+        this.id = id;
         this.name = name;
         this.authorities = Collections.singleton(new SimpleGrantedAuthority(roles.name()));
     }
@@ -29,7 +33,7 @@ public class JwtUserDetails implements UserDetails {
 
     @Override
     public String getUsername() {
-        return name;
+        return this.name;
     }
 
 }

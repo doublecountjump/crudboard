@@ -49,4 +49,14 @@ public class User {
 
     @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Like> likeList = new ArrayList<>();
+
+
+    private User(Long id){
+        this.id = id;
+    }
+
+    public static User Quick(Long id){
+        return new User(id);
+    }
+
 }

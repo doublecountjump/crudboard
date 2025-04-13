@@ -29,27 +29,41 @@ public class CommentService {
     private final UserService userService;
     private final JpaCommentRepository commentRepository;
 
-    public Comment saveParentComment(Long postId, String context, String name){
-        User user = userService.findUserByNickname(name);
-        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("comment entity not found"));
-        Comment comment = new Comment(post, user);
+    public Comment saveParentComment(Long postId, String context, Long userId){
+
+        Comment comment = new Comment();
         comment.setContent(context);
+        comment.setPost(Post.Quick(postId));
+        comment.setUser(User.Quick(userId));
+        comment.setIsParent(true);
 
         return commentRepository.save(comment);
     }
 
-    public Comment saveChildComment(Long postId, Long parentId, String content, String name) {
-        User user = userService.findUserByNickname(name);
-        Post post = postRepository.findById(postId).orElseThrow(() -> new EntityNotFoundException("comment entity not found"));
-        Comment parent = commentRepository.findById(parentId).orElseThrow(() -> new EntityNotFoundException());
-        Comment child = new Comment(post, user, parent);
+    public Comment saveChildComment(Long postId, Long parentId, String content, Long userId) {
+        Comment child = new Comment();
+
         child.setContent(content);
+        child.setParent(Comment.Quick(parentId));
+        child.setIsParent(false);
+        child.setPost(Post.Quick(postId));
+        child.setUser(User.Quick(userId));
 
         return commentRepository.save(child);
     }
 
     public List<Comment> getCommentList(Long postId){
         return commentRepository.findCommentsByPostId(postId);
+    }
+
+
+    public boolean isCommentOwner(Long commentId, String name){
+        return commentRepository.existsCommentByIdAndUserNickname(commentId, name);
+    }
+
+    public void deleteComment(Long commentId) {
+        commentRepository.deleteCommentById(commentId);
+        log.info("delete comment : {}" ,commentId);
     }
 
     /**
@@ -108,14 +122,5 @@ public class CommentService {
 
         dto.setStartPage(startPage);
         dto.setEndPage(endPage);
-    }
-
-    public boolean isCommentOwner(Long commentId, String name){
-        return commentRepository.existsCommentByIdAndUserNickname(commentId, name);
-    }
-
-    public void deleteComment(Long commentId) {
-        commentRepository.deleteCommentById(commentId);
-        log.info("delete comment : {}" ,commentId);
     }
 }

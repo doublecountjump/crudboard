@@ -43,7 +43,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         try {
-
             if(jwtService.isTokenBlacklisted(token)){
                 // 쿠키 삭제
                 Cookie cookie = new Cookie("jwt", null);
@@ -61,7 +60,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 Claims claims = jwtService.parseClaims(token);
 
                 JwtUserDetails userDetails = new JwtUserDetails(
-                        claims.get("id", String.class),
+                        claims.get("id", Long.class),
+                        claims.get("nickname", String.class),
                         Roles.valueOf(claims.get("roles", String.class)));
 
                 Authentication authentication =

@@ -125,13 +125,26 @@
         }
     </style>
     <script>
-        function toggleReplyForm(commentId) {
-            const replyForm = document.getElementById('reply-form-' + commentId);
-            if (replyForm.style.display === 'none') {
-                replyForm.style.display = 'block';
-            } else {
-                replyForm.style.display = 'none';
-            }
+        function editPost(postId) {
+            // 현재 페이지의 제목과 내용 가져오기
+            const title = document.querySelector('.post-title').textContent;
+            const content = document.querySelector('.post-content').textContent;
+            const nickname = document.querySelector('.post-info span').textContent.replace('작성자: ', '');
+
+            // Form 데이터 생성
+            const formData = new FormData();
+            formData.append('name', nickname);
+            formData.append('head', title);
+            formData.append('context', content);
+
+            // GET 요청 시 쿼리 파라미터로 전달
+            const params = new URLSearchParams();
+            params.append('name', nickname);
+            params.append('head', title);
+            params.append('context', content);
+
+            // 수정 페이지로 이동
+            window.location.href = `/post/edit/${postId}?${params.toString()}`;
         }
 
         function deletePost(postId) {
@@ -206,7 +219,8 @@
     <div class="post-header">
         <h1 class="post-title" th:text="${header.head}">제목</h1>
         <div th:if="${currentUserNickname == header.nickname}">
-            <a th:href="@{/post/edit/{id}(id=${header.post_id})}" class="btn btn-primary">수정</a>
+            <button th:onclick="'editPost(' + ${header.post_id} + ')'"
+                    class="btn btn-primary">수정</button>
             <button th:onclick="'deletePost(' + ${header.post_id} + ')'"
                     class="delete-btn">삭제</button>
         </div>

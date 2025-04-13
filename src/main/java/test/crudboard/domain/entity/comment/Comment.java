@@ -59,23 +59,6 @@ public class Comment {
         return this.isParent;
     }
 
-    public Comment(Post post, User user, Comment parent){
-        this.setPost(post);
-        this.setUser(user);
-        this.parent = parent;
-        parent.getChild().add(this);
-        this.depth = parent.getDepth()+1L;
-        this.isParent =false;
-    }
-
-
-    public Comment(Post post, User user){
-        this.setPost(post);
-        this.setUser(user);
-        this.depth = 0L;
-        this.isParent = true;
-    }
-
     public void setPost(Post post) {
         this.post = post;
         post.getCommentList().add(this);
@@ -86,10 +69,22 @@ public class Comment {
         user.getCommentList().add(this);
     }
 
+    public void setIsParent(boolean isParent){
+        this.isParent = isParent;
+    }
+
     public void addChild(Comment comment) {
         if (!comment.isParent) {
             this.child.add(comment);
             comment.setParent(this);
         }else System.out.println("!comment.isParent error");
+    }
+
+    private Comment(Long id){
+        this.id = id;
+    }
+
+    public static Comment Quick(Long id){
+        return new Comment(id);
     }
 }

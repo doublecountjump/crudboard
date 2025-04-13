@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>게시글 수정</title>
+    <style>
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-control {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+        }
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+        .error {
+            color: red;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+        .btn-container {
+            margin-top: 20px;
+        }
+        .btn-submit {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-cancel {
+            padding: 10px 20px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+    </style>
+    <!-- CSRF 토큰 메타 태그 추가 (Spring Security 사용 시) -->
+    <meta name="_csrf" th:content="${_csrf?.token}">
+    <meta name="_csrf_header" th:content="${_csrf?.headerName}">
+</head>
+<body>
+<h2>게시글 수정</h2>
+<form id="editForm" th:data-post-id="${postId}">
+    <div class="form-group">
+        <label for="name">작성자</label>
+        <!-- 작성자는 수정 불가능하도록 readonly 처리 -->
+        <input type="hidden" id="name" name="name" th:value="*{postDto.name}">
+        <input type="text" th:value="*{postDto.name}" readonly class="form-control">
+    </div>
+
+    <div class="form-group">
+        <label for="head">제목</label>
+        <input type="text" id="head" name="head" th:field="*{postDto.head}" class="form-control">
+        <div class="error" id="headError" style="display: none;">
+            제목 오류 메시지
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label for="context">내용</label>
+        <textarea id="context" name="context" th:field="*{postDto.context}" class="form-control"></textarea>
+        <div class="error" id="contextError" style="display: none;">
+            내용 오류 <메시지></메시지>
+        </div>
+    </div>
+
+    <div class="btn-container">
+        <button type="submit" class="btn-submit">수정완료</button>
+        <a th:href="@{/post/{postId}(postId=${postId})}" class="btn-cancel">취소</a>
+    </div>
+</form>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.getElementById('editForm');
+        const postId = form.getAttribute('data-post-id');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // 폼 데이터 수집
+            const name = document.getElementById('name').value;
+            const head = document.getElementById('head').value;
+            const context = document.getElementById('context').value;
+
+            // 유효성 검사
+            let isValid = true;
+
+            if (!head.trim()) {
+                document.getElementById('headError').textContent = '제목을 입력해주세요.';
+                document.getElementById('headError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('headError').style.display = 'none';
+            }
+
+            if (!context.trim()) {
+                document.getElementById('contextError').textContent = '내용을 입력해주세요.';
+                document.getElementById('contextError').style.display = 'block';
+                isValid = false;
+            } else {
+                document.getElementById('contextError').style.display = 'none';
+            }
+
+            if (!isValid) return;
+
+            // FormData 객체 생성
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('head', head);
+            formData.append('context', context);
+            formData.append('_method', 'PATCH'); // HTTP 메소드 오버라이드
+
+            // CSRF 토큰 가져오기 (Spring Security 사용 시)
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.content;
+
+            // Fetch 요청을 위한 헤더
+            const headers = new Headers();
+            if (csrfHeader && csrfToken) {
+                headers.append(csrfHeader, csrfToken);
+            }
+
+            // Fetch 요청 보내기
+            fetch(`/post/edit/${postId}`, {
+                method: 'POST',
+                headers: headers,
+                body: formData
+            })
+                .then(response => {
+                    if (response.ok || response.redirected) {
+                        window.location.href = `/post/${postId}`;
+                    } else {
+                        return response.json();
+                    }
+                })
+                .then(data => {
+                    if (data && data.errors) {
+                        // 서버에서 유효성 검사 오류가 반환된 경우 처리
+                        if (data.errors.head) {
+                            document.getElementById('headError').textContent = data.errors.head;
+                            document.getElementById('headError').style.display = 'block';
+                        }
+
+                        if (data.errors.context) {
+                            document.getElementById('contextError').textContent = data.errors.context;
+                            document.getElementById('contextError').style.display = 'block';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('게시글 수정 중 오류가 발생했습니다.');
+                });
+        });
+    });
+</script>
+</body>
+</html>

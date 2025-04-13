@@ -11,6 +11,7 @@ import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import test.crudboard.domain.aop.annotation.CheckResourceOwner;
+import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.post.dto.CreatePostDto;
 import test.crudboard.domain.entity.post.dto.PostDetailDto;
 import test.crudboard.domain.entity.enumtype.ResourceType;
@@ -39,11 +40,13 @@ public class PostController {
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/create")
-    public String createPost(@Valid @ModelAttribute CreatePostDto createPostDto, BindingResult bindingResult){
+    public String createPost(@AuthenticationPrincipal JwtUserDetails userDetails,
+                             @Valid @ModelAttribute CreatePostDto createPostDto,
+                             BindingResult bindingResult){
         if(bindingResult.hasErrors()){
             return "post";
         }
-        postService.save(createPostDto);
+        postService.save(createPostDto, userDetails.getId());
         return "redirect:/";
     }
 
@@ -60,11 +63,47 @@ public class PostController {
         return "post-detail";
     }
 
+    @GetMapping(("/edit/{postId}"))
+    @CheckResourceOwner(type = ResourceType.POST)
+    public String editPage(@PathVariable Long postId,
+                           @AuthenticationPrincipal JwtUserDetails user,
+                           Model model) {
+        // 게시글 정보 가져오기
+        Post post = postService.findById(postId);
+
+        // CreatePostDto 객체 생성 및 값 설정
+        CreatePostDto postDto = new CreatePostDto(post.getUser().getNickname());
+        postDto.setHead(post.getHead());
+        postDto.setContext(post.getContext());
+
+        // 모델에 데이터 추가
+        model.addAttribute("postDto", postDto);
+        model.addAttribute("postId", postId);
+
+        return "post-edit";
+    }
+
+    @PostMapping("/edit/{postId}")
+    @CheckResourceOwner(type = ResourceType.POST)
+    public String editPost(@PathVariable Long postId,
+                           @AuthenticationPrincipal JwtUserDetails user,
+                           @Valid @ModelAttribute CreatePostDto postDto,
+                           BindingResult bindingResult,
+                           Model model) {
+        // 유효성 검사 실패 시 수정 페이지로 다시 이동
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("postId", postId);
+            return "post-edit";
+        }
+
+        Post update = postService.update(postId, postDto);
+        return "redirect:/post/" + update.getId();
+    }
 
     @PreAuthorize("isAuthenticated()")
     @PostMapping("/recommend/{postId}")
     public String recommendPost(@PathVariable Long postId, @AuthenticationPrincipal JwtUserDetails user){
-        likeService.recommendPost(postId,user.getUsername());
+        likeService.recommendPost(postId,user.getId());
 
         return "redirect:/post/" + postId;
     }
