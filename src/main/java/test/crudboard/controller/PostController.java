@@ -18,6 +18,7 @@ import test.crudboard.domain.entity.enumtype.ResourceType;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.LikeService;
 import test.crudboard.service.PostService;
+import test.crudboard.service.RedisService;
 
 
 /**
@@ -30,6 +31,7 @@ import test.crudboard.service.PostService;
 public class PostController {
     private final PostService postService;
     private final LikeService likeService;
+    private final RedisService redisService;
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create")
@@ -97,6 +99,7 @@ public class PostController {
         }
 
         Post update = postService.update(postId, postDto);
+        redisService.update(update);
         return "redirect:/post/" + update.getId();
     }
 

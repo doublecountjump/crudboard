@@ -122,6 +122,7 @@ public class  PostService{
 
     @Transactional
     public void deletePost(Long id) {
+        redisService.deleteCacheById(id);
         postRepository.deleteById(id);
         log.info("Delete Post! id : {}", id);
     }
