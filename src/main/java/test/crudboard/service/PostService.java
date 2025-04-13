@@ -55,12 +55,13 @@ public class  PostService{
                 .head(createPostDto.getHead())
                 .context(createPostDto.getContext())
                 .view(0L)
+                .like_count(0L)
                 .build();
 
         post.setUser(User.Quick(id));
         Post save = postRepository.save(post);
 
-        redisService.savePostHeader(post);
+        redisService.savePostHeader(save);
 
         return save;
     }

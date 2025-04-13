@@ -22,6 +22,11 @@ public class Like {
     @Column(name = "like_id")
     private Long id;
 
-    private Long post_id;
-    private String nickname;
+    @ManyToOne
+    @JoinColumn(name = "post_id")
+    private Post post;
+
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }
