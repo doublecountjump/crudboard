@@ -19,7 +19,7 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
             "p.context, " +
             "p.view, " +
             "p.created, " +
-            "(select count(l) from Like l where l.post.id = p.id) as like_count, " +
+            "(select count(l) from Like l where l.post_id = p.id) as like_count, " +
             "(select count(c) from Comment c where c.post.id = p.id) as comment_count, " +
             "p.user.nickname) ";
     @Query(MAIN_TITLE_SQL + "from Post p")
