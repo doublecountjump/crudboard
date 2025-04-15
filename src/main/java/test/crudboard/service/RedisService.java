@@ -4,7 +4,6 @@ package test.crudboard.service;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -12,11 +11,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import test.crudboard.domain.entity.post.Post;
-import test.crudboard.domain.entity.post.dto.CreatePostDto;
 import test.crudboard.domain.entity.post.dto.PostHeader;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.error.CacheNotFoundException;
-import test.crudboard.domain.error.ErrorCode;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.RedisRepository;
 
@@ -26,6 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import static test.crudboard.domain.error.ErrorCode.*;
+import static test.crudboard.domain.type.RedisField.VIEW;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -33,6 +33,10 @@ public class RedisService {
     private final RedisRepository redisRepository;
     private final RedisTemplate<String,String> template;
     private final JpaPostRepository postRepository;
+
+    public static final Long HOUR = 60 * 60L;
+    public static final Long DAY = 60 * 60 * 12L;
+
     public void savePostHeader(Post post) {
         PostHeader dto = init(post);
 
@@ -60,10 +64,17 @@ public class RedisService {
         dto.setLike_count(post.getLike_count());
         dto.setComment_count(0L);
         dto.setNickname(post.getUser().getNickname());
-        dto.setTtl(false);
+        dto.setTtl(DAY);
         return dto;
     }
 
+    public void addHeader(PostHeaderDto dto) {
+        PostHeader header = new PostHeader(dto);
+        header.setTtl(HOUR);
+
+        PostHeader save = redisRepository.save(header);
+        template.opsForHash().increment("post:" + save.getPost_id(), VIEW,1);
+    }
 
     public String getZsetKey(LocalDate localDate){
         String code = "post:"+localDate.getYear() + ":" +localDate.getMonthValue();
@@ -71,7 +82,9 @@ public class RedisService {
     }
 
     public PostHeader getPostHeader(Long postId) {
-        return redisRepository.findById(postId).orElseThrow(() -> new CacheNotFoundException(ErrorCode.NO_DATA_IN_CACHE));
+        PostHeader header = redisRepository.findById(postId).orElseThrow(() -> new CacheNotFoundException(NO_DATA_EXISTS_IN_CACHE));
+        template.opsForHash().increment("post:" + header.getPost_id(), VIEW, 1);
+        return header;
     }
 
 
@@ -96,7 +109,7 @@ public class RedisService {
         }
 
         if(list.size() < pageSize){
-            throw new CacheNotFoundException(ErrorCode.INSUFFICIENT_DATA_IN_CACHE);
+            throw new CacheNotFoundException(INSUFFICIENT_DATA_IN_CACHE);
         }
 
 
@@ -137,17 +150,23 @@ public class RedisService {
         template.opsForZSet().remove(key, id.toString());
     }
 
-    public void update(Post post) {
-        String key = "post:" + post.getId();
-        String head = post.getHead();
-        String context = post.getContext();
+    public void update(Long postId, String field, String data) {
+        String key = "post:" + postId;
 
         try {
-            template.opsForHash().put(key, "head", head);
-            template.opsForHash().put(key, "context", context);
+            template.opsForHash().put(key, field, data);
         }catch (Exception e){
-            log.warn("[{}] 캐시 저장중 문제 발생 : {}", post.getId(), e.getMessage() );
+            log.warn("[{}] 캐시 저장중 문제 발생 : {}",key, e.getMessage());
         }
 
+    }
+
+    public void increment(Long postId, String field, long count) {
+        String key = "post:" + postId;
+        try {
+            template.opsForHash().increment(key, field, count);
+        }catch (Exception e){
+            log.warn("[{}] 캐시 저장중 문제 발생 : {}",key, e.getMessage());
+        }
     }
 }

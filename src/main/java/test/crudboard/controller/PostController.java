@@ -99,7 +99,6 @@ public class PostController {
         }
 
         Post update = postService.update(postId, postDto);
-        redisService.update(update);
         return "redirect:/post/" + update.getId();
     }
 

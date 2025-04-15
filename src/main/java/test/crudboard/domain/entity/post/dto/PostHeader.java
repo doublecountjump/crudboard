@@ -27,10 +27,18 @@ public class PostHeader {
     private Long comment_count;
 
     private String nickname;
+    @Setter
     @TimeToLive
     private Long ttl;
 
-    public void setTtl(boolean recommend){
-        this.ttl = recommend ?  (60 * 60 * 24 * 7L) : (60 * 60 * 24L);
+    public PostHeader(PostHeaderDto dto){
+        this.post_id = dto.getPost_id();
+        this.head = dto.getHead();
+        this.context = dto.getContext();
+        this.view = dto.getView();
+        this.created = dto.getCreated();
+        this.like_count = dto.getLike_count();
+        this.comment_count = dto.getComment_count();
+        this.nickname = dto.getNickname();
     }
 }

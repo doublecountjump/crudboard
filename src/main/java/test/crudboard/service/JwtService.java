@@ -75,7 +75,7 @@ public class JwtService {
 
             return true;
         }catch (ExpiredJwtException e) {
-            throw new TokenExpiredException(ErrorCode.JWT_TOKEN_IS_EXPIRED);
+            throw new TokenExpiredException(ErrorCode.JWT_TOKEN_HAS_EXPIRED);
         } catch (JwtException e) {
             return false;
         }

@@ -12,6 +12,7 @@ import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.user.User;
 import test.crudboard.domain.entity.comment.dto.CommentPageDto;
 import test.crudboard.domain.entity.comment.dto.PostFooterDto;
+import test.crudboard.domain.type.RedisField;
 import test.crudboard.repository.JpaCommentRepository;
 import test.crudboard.repository.JpaPostRepository;
 
@@ -20,14 +21,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static test.crudboard.domain.type.RedisField.COMMENT_COUNT;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional
 public class CommentService {
-    private final JpaPostRepository postRepository;
-    private final UserService userService;
     private final JpaCommentRepository commentRepository;
+    private final RedisService redisService;
 
     public Comment saveParentComment(Long postId, String context, Long userId){
 
@@ -37,19 +39,25 @@ public class CommentService {
         comment.setUser(User.Quick(userId));
         comment.setIsParent(true);
 
-        return commentRepository.save(comment);
+        Comment save = commentRepository.save(comment);
+        redisService.increment(postId, "comment" , 1L);
+
+        return save;
     }
 
     public Comment saveChildComment(Long postId, Long parentId, String content, Long userId) {
         Comment child = new Comment();
 
+        child.setPost(Post.Quick(postId));
         child.setContent(content);
+        child.setUser(User.Quick(userId));
         child.setParent(Comment.Quick(parentId));
         child.setIsParent(false);
-        child.setPost(Post.Quick(postId));
-        child.setUser(User.Quick(userId));
 
-        return commentRepository.save(child);
+
+        Comment save = commentRepository.save(child);
+        redisService.increment(postId, COMMENT_COUNT, 1L);
+        return save;
     }
 
     public List<Comment> getCommentList(Long postId){
@@ -61,8 +69,11 @@ public class CommentService {
         return commentRepository.existsCommentByIdAndUserNickname(commentId, name);
     }
 
-    public void deleteComment(Long commentId) {
+    public void deleteComment(Long postId, Long commentId) {
         commentRepository.deleteCommentById(commentId);
+
+        long count = commentRepository.countByPostId(postId);
+        redisService.update(postId,COMMENT_COUNT,String.valueOf(count));
         log.info("delete comment : {}" ,commentId);
     }
 

@@ -1,12 +1,10 @@
 package test.crudboard.service;
 
 
-import jakarta.annotation.PostConstruct;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import test.crudboard.domain.entity.comment.Comment;
@@ -23,8 +21,6 @@ import org.springframework.data.domain.Sort;
 
 import java.util.*;
 
-import static test.crudboard.domain.type.RedisDataType.POST_LIKE_COUNT;
-import static test.crudboard.domain.type.RedisDataType.POST_VIEW_COUNT;
 import static test.crudboard.domain.type.RedisField.*;
 
 
@@ -47,6 +43,7 @@ public class  PostService{
             redisService.savePostHeader(post);
         }
     }*/
+
     //게시글 저장
     @Transactional
     public Post save(CreatePostDto createPostDto, Long id){
@@ -101,9 +98,10 @@ public class  PostService{
             return new PostDetailDto(header,footer);
         }
         catch (CacheNotFoundException e){
-            e.getMessage();
-            log.warn("게시글이 캐시에 존재하지 않습니다.");
+            log.warn("[{}] {}",postId, e.getMessage());
+            log.warn("[{}] 게시글이 캐시에 존재하지 않습니다.",postId);
             header = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+            redisService.addHeader(header);
         }
 
         return new PostDetailDto(header, footer);
@@ -114,8 +112,14 @@ public class  PostService{
         Post post = postRepository.findById(postId)
                 .orElseThrow(() -> new EntityNotFoundException("entity not found"));
 
-        post.setHead(postDto.getHead());
-        post.setContext(postDto.getContext());
+        String head = postDto.getHead();
+        String context = postDto.getContext();
+
+        post.setHead(head);
+        post.setContext(context);
+
+        redisService.update(postId, HEAD, head);
+        redisService.update(postId, CONTEXT, context);
 
         return post;
     }
@@ -159,8 +163,8 @@ public class  PostService{
         header.setHead((String) resultMap.get(HEAD));
         header.setContext((String) resultMap.get(CONTEXT));
         header.setView(Long.parseLong((String)resultMap.get(VIEW)));
-        header.setLike_count(Long.parseLong((String)resultMap.get(LIKES)));
-        header.setComment_count(Long.parseLong((String)resultMap.get(COMMENTS)));
+        header.setLike_count(Long.parseLong((String)resultMap.get(LIKE_COUNT)));
+        header.setComment_count(Long.parseLong((String)resultMap.get(COMMENT_COUNT)));
         header.setNickname((String) resultMap.get(NICKNAME));
         return header;
     }

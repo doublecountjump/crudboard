@@ -45,7 +45,7 @@ public class CommentController {
     @ResponseBody
     public void deletePost(@PathVariable Long commentId, @AuthenticationPrincipal Object user,
                            @PathVariable Long postId){
-        commentService.deleteComment(commentId);
+        commentService.deleteComment(postId, commentId);
     }
 
 }

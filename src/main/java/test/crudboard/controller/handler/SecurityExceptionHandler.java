@@ -18,19 +18,19 @@ public class SecurityExceptionHandler {
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
-    public String entityNotFoundExceptionHandler(AccessDeniedException e, RedirectAttributes redirectAttributes) {
+    public String entityNotFoundExceptionHandler(EntityNotFoundException e, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("errorMessage", "존재하지 않는 객체입니다.");
         return "redirect:/";
     }
 
     @ExceptionHandler(BadCredentialsException.class)
-    public String badCredentialsExceptionHandler(AccessDeniedException e, RedirectAttributes redirectAttributes) {
+    public String badCredentialsExceptionHandler(BadCredentialsException e, RedirectAttributes redirectAttributes) {
         redirectAttributes.addFlashAttribute("errorMessage", "BAD");
         return "redirect:/";
     }
 
     @ExceptionHandler(TokenExpiredException.class)
-    public String TokenExpiredException(AccessDeniedException e, RedirectAttributes redirectAttributes){
+    public String TokenExpiredException(TokenExpiredException e, RedirectAttributes redirectAttributes){
         redirectAttributes.addFlashAttribute("tokenExpired",e.getMessage());
         return "redirect:/";
     }

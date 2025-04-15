@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import test.crudboard.domain.entity.like.Like;
 import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.user.User;
+import test.crudboard.domain.error.AlreadyLikedException;
+import test.crudboard.domain.error.ErrorCode;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.repository.LikeRepository;
@@ -28,7 +30,7 @@ public class LikeService {
         boolean exist = likeRepository.existsLikeByPostIdAndUserId(postId, userId);
 
         if(exist){
-            likeRepository.deleteLikeByPostIdAndUserId(postId, userId);
+            throw new AlreadyLikedException(ErrorCode.USER_HAS_ALREADY_LIKED_POST);
         }else{
             Like like = Like.builder()
                     .user(User.Quick(userId))

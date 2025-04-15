@@ -39,4 +39,6 @@ public interface JpaCommentRepository extends JpaRepository<Comment, Long> {
             "order by coalesce(c.parent.id, c.id) , c.isParent desc , c.id asc")
     Page<CommentPageDto> findCommentPageByPostId(@Param("postId") Long postId, Pageable pageRequest);
 
+    long countByPostId(Long postId);
+
 }

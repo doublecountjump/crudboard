@@ -53,7 +53,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 // Security Context 초기화
                 SecurityContextHolder.clearContext();
 
-                throw new TokenExpiredException(ErrorCode.JWT_TOKEN_IS_EXPIRED);
+                throw new TokenExpiredException(ErrorCode.JWT_TOKEN_HAS_EXPIRED);
 
             }
             if (jwtService.validToken(token)) {
