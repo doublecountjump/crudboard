@@ -19,6 +19,8 @@ import test.crudboard.repository.JpaPostRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static test.crudboard.domain.type.RedisField.*;
@@ -75,8 +77,30 @@ public class  PostService{
         }catch (CacheNotFoundException e){
             System.out.println(e.getMessage());
             log.error("[getTitleList] Redis Error");
-            PageRequest created = PageRequest.of(page - 1, 20, Sort.by("id").descending());
-            dto = postRepository.findPostList(created);
+            PageRequest created = PageRequest.of(page - 1, 20);
+            Page<Object[]> objectPage = postRepository.findPostList(created);
+
+            List<PostHeaderDto> dtoList = new ArrayList<>();
+            for (Object[] content : objectPage.getContent()) {
+                PostHeaderDto header = new PostHeaderDto();
+                header.setPost_id((Long) content[0]);
+                header.setHead((String) content[1]);
+                header.setContext((String) content[2]);
+                header.setView((Long) content[3]);
+                Timestamp timestamp = (Timestamp) content[4];
+                header.setCreated(timestamp.toLocalDateTime());
+                header.setLike_count((Long) content[5]);
+                header.setComment_count((Long) content[6]);
+                header.setNickname((String) content[7]);
+                dtoList.add(header);
+            }
+            dto = new PageImpl<>(
+                    dtoList,
+                    objectPage.getPageable(),
+                    objectPage.getTotalElements()
+            );
+
+
         }
 
         return dto;
