@@ -77,7 +77,7 @@ public class  PostService{
         }catch (CacheNotFoundException e){
             System.out.println(e.getMessage());
             log.error("[getTitleList] Redis Error");
-            PageRequest created = PageRequest.of(page - 1, 20);
+            PageRequest created = PageRequest.of(page - 1, 20 );
             Page<Object[]> objectPage = postRepository.findPostList(created);
 
             List<PostHeaderDto> dtoList = new ArrayList<>();
@@ -87,8 +87,8 @@ public class  PostService{
                 header.setHead((String) content[1]);
                 header.setContext((String) content[2]);
                 header.setView((Long) content[3]);
-                Timestamp timestamp = (Timestamp) content[4];
-                header.setCreated(timestamp.toLocalDateTime());
+                //Timestamp timestamp = (Timestamp) content[4];
+                header.setCreated((LocalDateTime)content[4]);
                 header.setLike_count((Long) content[5]);
                 header.setComment_count((Long) content[6]);
                 header.setNickname((String) content[7]);
