@@ -24,11 +24,11 @@ public class ViewBackupService {
     private final RedisTemplate<String, String> redisTemplate;
     private final JpaPostRepository postRepository;
 
-    @Scheduled(fixedRate = 300 * 1000) // 5분마다 실행
+    @Scheduled(fixedRate = 60 * 1000) // 5분마다 실행
     public void backupViewCounts() {
         // SCAN 명령어를 사용하여 키를 점진적으로 가져옴
         ScanOptions options = ScanOptions.scanOptions()
-                .match(POST)
+                .match(POST + "*")
                 .count(100) // 한 번에 반환할 키 수 힌트
                 .build();
 
@@ -39,20 +39,22 @@ public class ViewBackupService {
             while (cursor.hasNext()) {
                 String key = cursor.next();
                 try {
-                    String postIdStr = key.substring(POST.length());
-                    Long postId = Long.parseLong(postIdStr);
-                    String viewCount = (String)redisTemplate.opsForHash().get(key, VIEW);
+                    if (key.matches(POST + "\\d+$")) {
+                        String postIdStr = key.substring(POST.length());
+                        Long postId = Long.parseLong(postIdStr);
+                        String viewCount = (String) redisTemplate.opsForHash().get(key, VIEW);
 
-                    if (viewCount != null) {
-                        Post post = postRepository.findById(postId).orElse(null);
-                        if (post != null) {
-                            post.setView(Long.parseLong(viewCount));
-                            posts.add(post);
+                        if (viewCount != null) {
+                            Post post = postRepository.findById(postId).orElse(null);
+                            if (post != null) {
+                                post.setView(Long.parseLong(viewCount));
+                                posts.add(post);
 
-                            if (posts.size() >= 500) {
-                                postRepository.saveAll(posts);
-                                log.info("Backed up view counts for batch of {} posts", posts.size());
-                                posts.clear();
+                                if (posts.size() >= 500) {
+                                    postRepository.saveAll(posts);
+                                    log.info("Backed up view counts for batch of {} posts", posts.size());
+                                    posts.clear();
+                                }
                             }
                         }
                     }

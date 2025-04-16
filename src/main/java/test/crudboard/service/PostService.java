@@ -19,7 +19,6 @@ import test.crudboard.repository.JpaPostRepository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -77,23 +76,13 @@ public class  PostService{
         }catch (CacheNotFoundException e){
             System.out.println(e.getMessage());
             log.error("[getTitleList] Redis Error");
-            PageRequest created = PageRequest.of(page - 1, 20 );
+            PageRequest created = PageRequest.of(page - 1, 20, Sort.by("id").descending());
             Page<Object[]> objectPage = postRepository.findPostList(created);
 
-            List<PostHeaderDto> dtoList = new ArrayList<>();
-            for (Object[] content : objectPage.getContent()) {
-                PostHeaderDto header = new PostHeaderDto();
-                header.setPost_id((Long) content[0]);
-                header.setHead((String) content[1]);
-                header.setContext((String) content[2]);
-                header.setView((Long) content[3]);
-                //Timestamp timestamp = (Timestamp) content[4];
-                header.setCreated((LocalDateTime)content[4]);
-                header.setLike_count((Long) content[5]);
-                header.setComment_count((Long) content[6]);
-                header.setNickname((String) content[7]);
-                dtoList.add(header);
-            }
+            List<Long> list = objectPage.getContent().stream().map(o -> (Long) o[0]).toList();
+            Map<Long, Long> views = redisService.getView(list);
+
+            List<PostHeaderDto> dtoList = getPostHeaderDtos(objectPage,views);
             dto = new PageImpl<>(
                     dtoList,
                     objectPage.getPageable(),
@@ -106,13 +95,34 @@ public class  PostService{
         return dto;
     }
 
+    private static List<PostHeaderDto> getPostHeaderDtos(Page<Object[]> objectPage,Map<Long, Long> views) {
+        List<PostHeaderDto> dtoList = new ArrayList<>();
+        for (Object[] content : objectPage.getContent()) {
+            PostHeaderDto header = new PostHeaderDto();
+            Long key = (Long)content[0];
+            header.setPost_id(key);
+            header.setHead((String) content[1]);
+            header.setContext((String) content[2]);
+            header.setView(
+                    views.get(key) != null ? views.get(key) : (Long)content[3]
+            );
+            header.setCreated((LocalDateTime)content[4]);
+            header.setLike_count((Long) content[5]);
+            header.setComment_count((Long) content[6]);
+            header.setNickname((String) content[7]);
+
+            dtoList.add(header);
+        }
+        return dtoList;
+    }
+
 
     /**
      * 해당하는 id의 게시글을 가져옴
      * @param postId 게시글의 id
      * @return
      */
-    @Transactional(readOnly = true)
+    @Transactional
     public PostDetailDto getPostDetailDtoById(Long postId, boolean isRecommend){
         List<Comment> footer = commentService.getCommentList(postId);
         PostHeaderDto header;
@@ -121,12 +131,14 @@ public class  PostService{
             header = new PostHeaderDto(postHeader);
             return new PostDetailDto(header,footer);
         }
-        catch (CacheNotFoundException e){
-            log.warn("[{}] {}",postId, e.getMessage());
-            log.warn("[{}] 게시글이 캐시에 존재하지 않습니다.",postId);
+        catch (CacheNotFoundException e) {
+            log.warn("[{}] {}", postId, e.getMessage());
+            log.warn("[{}] 게시글이 캐시에 존재하지 않습니다.", postId);
+
             header = postRepository.findPostDetailDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
             redisService.addHeader(header);
         }
+
 
         return new PostDetailDto(header, footer);
     }

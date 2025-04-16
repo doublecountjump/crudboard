@@ -1,8 +1,11 @@
 package test.crudboard.repository;
 
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import test.crudboard.domain.entity.post.Post;
@@ -60,6 +63,14 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
 
     @Query("select count(p.id) from Post p")
     long count();
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT p FROM Post p WHERE p.id = :postId")
+    Optional<Post> findByIdWithLock(@Param("postId") Long postId);
+
+    @Modifying
+    @Query("UPDATE Post p SET p.view = p.view + 1 WHERE p.id = :postId")
+    void IncrementViewCount(@Param("postId") Long postId);
 
 /*
 

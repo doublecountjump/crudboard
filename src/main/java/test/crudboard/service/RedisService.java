@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.redis.connection.StringRedisConnection;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -21,9 +23,13 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static test.crudboard.domain.error.ErrorCode.*;
+import static test.crudboard.domain.type.RedisField.POST;
 import static test.crudboard.domain.type.RedisField.VIEW;
 
 @Service
@@ -34,6 +40,7 @@ public class RedisService {
     private final RedisTemplate<String,String> template;
     private final JpaPostRepository postRepository;
 
+    public static final Long MINUTE = 60L;
     public static final Long HOUR = 60 * 60L;
     public static final Long DAY = 60 * 60 * 12L;
 
@@ -168,5 +175,28 @@ public class RedisService {
         }catch (Exception e){
             log.warn("[{}] 캐시 저장중 문제 발생 : {}",key, e.getMessage());
         }
+    }
+
+    public Map<Long, Long> getView(List<Long> list) {
+        List<Object> keys = template.executePipelined(
+                (RedisCallback<?>) call -> {
+                    StringRedisConnection connection = (StringRedisConnection) call;
+                    for (Long key : list) {
+                        connection.hGet(POST + String.valueOf(key), VIEW);
+                    }
+
+                    return null;
+                }
+        );
+
+        Map<Long, Long> collect = IntStream.range(0, list.size())
+                .boxed()
+                .filter(i -> keys.get(i) != null)
+                .collect(Collectors.toMap(
+                        list::get,
+                        i -> Long.parseLong((String) keys.get(i))
+                ));
+
+        return collect;
     }
 }
