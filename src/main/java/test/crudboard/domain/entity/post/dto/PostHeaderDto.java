@@ -20,11 +20,13 @@ public class PostHeaderDto {
     private String context;
     private Long view;
     private LocalDateTime created;
+
     private Long like_count;
     private Long comment_count;
 
     private String nickname;
 
+    //redis 에서 전달받는 객체인 PostHeader 를 위한 생성자
     public PostHeaderDto(PostHeader dto){
         this.post_id = dto.getPost_id();
         this.head = dto.getHead();

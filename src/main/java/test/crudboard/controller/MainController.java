@@ -14,11 +14,12 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.entity.post.dto.SearchRequestDto;
-import test.crudboard.domain.entity.post.dto.MainTitleDto;
+
 import test.crudboard.domain.entity.user.dto.UserInfoDto;
 import test.crudboard.domain.entity.user.dto.UserJoinDto;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.repository.JpaUserRepository;
+import test.crudboard.service.PostHeaderService;
 import test.crudboard.service.PostService;
 import test.crudboard.service.UserService;
 
@@ -29,30 +30,42 @@ public class MainController {
     private final UserService userService;
     private final PostService postService;
     private final JpaUserRepository userRepository;
+    private final PostHeaderService postHeaderService;
+
+    private final int PAGE_SIZE = 10;
     @GetMapping(value = {"","/","/{page}"})
     public String home(@AuthenticationPrincipal JwtUserDetails userDetails, Model model,
                        @RequestParam(value = "isrecommend", required = false, defaultValue = "false") boolean isRecommend,
                        @PathVariable(required = false) Integer page){
+
+        //페이지가 지정되지 않으면, 1페이지로 고정
         if(page == null){
             page = 1;
         }
 
+        //로그인한 사용자의 경우, 사용자의 이름을 모델에 담아 전달
         if(userDetails != null){
             model.addAttribute("username", userDetails.getUsername());
         }
-        Page<PostHeaderDto> titleList = postService.getTitleList(page,isRecommend);
 
-        int totalPages = titleList.getTotalPages();
-        int pageSize = 10; // 한 블록에 보여줄 페이지 수
-        int currentBlock = (int) Math.ceil((double) page / pageSize);
-        int startPage = (currentBlock - 1) * pageSize + 1;
-        int endPage = Math.min(startPage + pageSize - 1, totalPages);
+        //해당하는 페이지의 게시글 목록 조회
+        Page<PostHeaderDto> titleList = postHeaderService.getTitleList(page,isRecommend);
 
+        //해당하는 페이지 블록 설정
+        int startPage = getStartPage(page, PAGE_SIZE);
+        int endPage = Math.min(startPage + PAGE_SIZE - 1, titleList.getTotalPages());
+
+        //모델에 전달
         model.addAttribute("titleList",titleList);
         model.addAttribute("startPage", startPage);
         model.addAttribute("endPage", endPage);
 
         return "main";
+    }
+
+    private int getStartPage(int page, int size){
+        int currentBlock = (int) Math.ceil((double) page / size);
+        return (currentBlock - 1) * size + 1;
     }
 
     @GetMapping("/login")
@@ -86,10 +99,10 @@ public class MainController {
         int page = search.getPage();
         String text = search.getContent();
         Page<PostHeaderDto> titleDto = switch (search.getType()){
-            case HEAD ->  postService.searchPostByHead(text, PageRequest.of(page - 1,5, Sort.by("created").descending()));
-            case HEAD_CONTENT ->  postService.searchPostByHeadOrContent(text, PageRequest.of(page - 1,5, Sort.by("created").descending()));
-            case NICKNAME ->  postService.searchPostByNickname(text, PageRequest.of(page - 1,5, Sort.by("created").descending()));
-            default ->  postService.searchPostByHead(text, PageRequest.of(page - 1,5, Sort.by("created").descending()));
+            case HEAD ->  postService.searchPostByHead(text, PageRequest.of(page - 1,5, Sort.by("id").descending()));
+            case HEAD_CONTENT ->  postService.searchPostByHeadOrContent(text, PageRequest.of(page - 1,5, Sort.by("id").descending()));
+            case NICKNAME ->  postService.searchPostByNickname(text, PageRequest.of(page - 1,5, Sort.by("id").descending()));
+            default ->  postService.searchPostByHead(text, PageRequest.of(page - 1,5, Sort.by("id").descending()));
         };
 
         if(user != null){

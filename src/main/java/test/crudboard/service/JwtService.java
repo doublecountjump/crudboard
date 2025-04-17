@@ -35,7 +35,10 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    //토큰 생성 메서드
+    /**
+     * 토큰 생성 메서드, 사용자를 찾아서 사용자의 id와 닉네임, 권한을 jwt 에 저장한다.
+     * @param email
+     */
     public String generateToken(String email){
         User user = userService.findUserByEmail(email);
 
@@ -81,6 +84,7 @@ public class JwtService {
         }
     }
 
+    //request 에서 토큰 추출
     public String extractToken(HttpServletRequest request){
         Cookie jwtCookie = WebUtils.getCookie(request, "jwt");
         if(jwtCookie == null){

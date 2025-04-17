@@ -14,8 +14,8 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import test.crudboard.domain.entity.user.User;
-import test.crudboard.domain.entity.enumtype.AuthProvider;
-import test.crudboard.domain.entity.enumtype.Roles;
+import test.crudboard.security.type.AuthProvider;
+import test.crudboard.security.type.Roles;
 import test.crudboard.repository.JpaUserRepository;
 
 import java.net.URI;

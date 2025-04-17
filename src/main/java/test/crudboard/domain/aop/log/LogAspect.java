@@ -19,13 +19,18 @@ public class LogAspect {
      */
     @Around("execution(* test.crudboard.service.*.*(..))")
     public Object extractLog(ProceedingJoinPoint joinPoint) throws Throwable {
+        //메서드 실행시간 체크를 위해, 시작시간 설정
         long start = System.currentTimeMillis();
+
         //proceed() 호출 시 메서드 실행, 호출 안하면 메서드 실행이 안된다!
         Object proceed = joinPoint.proceed();
+
+        //총 걸린시간 저장
         long end = System.currentTimeMillis() - start;
 
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getSignature().getDeclaringTypeName();
+
         log.info("[성능] {}.{} - {}ms", className, methodName, end);
 
         return proceed;

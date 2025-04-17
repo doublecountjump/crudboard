@@ -12,7 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
-import test.crudboard.domain.entity.enumtype.Roles;
+import test.crudboard.security.type.Roles;
 import test.crudboard.domain.error.ErrorCode;
 import test.crudboard.domain.error.TokenExpiredException;
 import test.crudboard.security.provider.JwtUserDetails;

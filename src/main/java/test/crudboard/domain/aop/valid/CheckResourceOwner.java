@@ -1,7 +1,5 @@
-package test.crudboard.domain.aop.annotation;
+package test.crudboard.domain.aop.valid;
 
-
-import test.crudboard.domain.entity.enumtype.ResourceType;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -8,6 +8,9 @@ import test.crudboard.domain.entity.comment.dto.PostFooterDto;
 
 import java.util.List;
 
+/**
+ * 게시글의 상세 부분(본문, 댓글) 전달을 위한 dto
+ */
 @Getter
 @AllArgsConstructor
 public class PostDetailDto {

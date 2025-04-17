@@ -12,8 +12,8 @@ import org.springframework.stereotype.Service;
 import test.crudboard.domain.entity.user.User;
 import test.crudboard.domain.entity.user.dto.UserInfoDto;
 import test.crudboard.domain.entity.user.dto.UserJoinDto;
-import test.crudboard.domain.entity.enumtype.AuthProvider;
-import test.crudboard.domain.entity.enumtype.Roles;
+import test.crudboard.security.type.AuthProvider;
+import test.crudboard.security.type.Roles;
 import test.crudboard.repository.JpaUserRepository;
 
 @Service

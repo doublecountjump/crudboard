@@ -20,23 +20,27 @@ public class LikeService {
     private final LikeRepository likeRepository;
     private final JpaUserRepository userRepository;
     private final JpaPostRepository postRepository;
+
     /**
-     * 현재 사용자를 게시글의 추천자로 등록
-     * @param postId
-     * @param id
-     */
+     * 게시글의 추천 목록을 추가하는 메서드
+     * @param postId 추천한 게시글
+     * */
     @Transactional
     public void recommendPost(Long postId, Long userId) {
+
+        //이미 추천을 했는지 확인
         boolean exist = likeRepository.existsLikeByPostIdAndUserId(postId, userId);
 
         if(exist){
+            //추천했다면, 변화를 주지 않음
             throw new AlreadyLikedException(ErrorCode.USER_HAS_ALREADY_LIKED_POST);
-        }else{
+        }
+        else{
+            //추천을 안한 사용자일 경우, 새 like 생성
             Like like = Like.builder()
                     .user(User.Quick(userId))
                     .post(Post.Quick(postId))
                     .build();
-
             likeRepository.save(like);
         }
     }

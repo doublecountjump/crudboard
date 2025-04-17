@@ -61,6 +61,7 @@ public class RefreshTokenService {
         if(validRefreshToken(token)){
             return jwtService.generateToken(token.getEmail());
         }else throw new BadCredentialsException("bad");     //에러 수정하기
+
     }
 
     private SecretKey getSecretKey(){

@@ -4,6 +4,7 @@ package test.crudboard.domain.entity.post.dto;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+//게시글 생성을 위한 dto
 @Data
 public class CreatePostDto {
     @NotBlank

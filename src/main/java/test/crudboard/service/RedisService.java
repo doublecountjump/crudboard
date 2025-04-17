@@ -32,6 +32,12 @@ import static test.crudboard.domain.error.ErrorCode.*;
 import static test.crudboard.domain.type.RedisField.POST;
 import static test.crudboard.domain.type.RedisField.VIEW;
 
+
+/**
+ * Redis 를 사용해 데이터를 처리
+ * redisRepository, redisTemplate 를 사용
+ * redisRepository 에는 PostHeader 객체가 저장됨
+ */
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -45,22 +51,26 @@ public class RedisService {
     public static final Long DAY = 60 * 60 * 12L;
 
     public void savePostHeader(Post post) {
+        //post 를 토대로 postHeader 생성
         PostHeader dto = init(post);
 
         PostHeader save = redisRepository.save(dto);
 
         String key = getZsetKey(LocalDate.now());
         String postId = save.getPost_id().toString();
-        double score = 1.0 * save.getPost_id();
+        Long score = save.getPost_id();
 
+        //캐시에 저장된 게시글 목록에 저장
         template.opsForZSet().add(key, postId, score);
 
+        //이번달 저장된 게시글 개수
         Long total = template.opsForZSet().zCard(key);
         if(total >= 100000L){
             log.warn("이번달 게시글 목록의 저장 수가 10만개를 넘어섰습니다.");
         }
     }
 
+    //postHeader 생성 메서드
     private static PostHeader init(Post post) {
         PostHeader dto = new PostHeader();
         dto.setPost_id(post.getId());
@@ -75,6 +85,7 @@ public class RedisService {
         return dto;
     }
 
+    // dto 를 받아서, 캐시에 저장
     public void addHeader(PostHeaderDto dto) {
         PostHeader header = new PostHeader(dto);
         header.setTtl(HOUR);
@@ -83,9 +94,10 @@ public class RedisService {
         template.opsForHash().increment("post:" + save.getPost_id(), VIEW,1);
     }
 
+
+    //날짜에 해당하는 페이지 목록 키를 반환
     public String getZsetKey(LocalDate localDate){
-        String code = "post:"+localDate.getYear() + ":" +localDate.getMonthValue();
-        return code;
+        return "post:" + localDate.getYear() + ":" +localDate.getMonthValue();
     }
 
     public PostHeader getPostHeader(Long postId) {

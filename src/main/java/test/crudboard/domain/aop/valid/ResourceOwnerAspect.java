@@ -1,4 +1,4 @@
-package test.crudboard.domain.aop.annotation;
+package test.crudboard.domain.aop.valid;
 
 
 import lombok.RequiredArgsConstructor;

@@ -21,14 +21,19 @@ public class TokenController {
 
     @GetMapping("/refresh")
     public ResponseEntity<String> refresh(HttpServletRequest request, HttpServletResponse response){
+
+        //요청에 첨부한 리프레시토큰 조회
         Token refreshToken = refreshTokenService.getRefreshToken(request);
 
+        //토큰의 유효기간 확인.
         if(!refreshTokenService.validRefreshToken(refreshToken)){
-            throw new BadCredentialsException("bad"); // 고치기
+            throw new BadCredentialsException("토큰이 유효하지 않습니다.");
         }
 
+        //리프레시 토큰으로 새 엑세스 토큰 생성
         String refreshAccessToken = refreshTokenService.getRefreshAccessToken(refreshToken);
 
+        //헤더에 반환
         return ResponseEntity.ok()
                 .header("Authorization", "Bearer " + refreshAccessToken)
                 .build();

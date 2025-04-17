@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import test.crudboard.domain.entity.comment.Comment;
-import test.crudboard.domain.entity.enumtype.AuthProvider;
-import test.crudboard.domain.entity.enumtype.Roles;
+import test.crudboard.security.type.AuthProvider;
+import test.crudboard.security.type.Roles;
 import test.crudboard.domain.entity.post.Post;
 
 import java.util.List;
 
+
+//사용자의 정보를 저장
 @Data
 @Builder
 @AllArgsConstructor

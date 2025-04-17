@@ -44,7 +44,7 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     //jpa  에서 join문을 만들 때, 명시적으로 join 한 것만 join함. post의 user가 eager로 설정되어도, 지정하지 않으면  지연로딩 처리됨
     @Query(MAIN_TITLE_SQL +
             "from Post p left join p.user u where p.id = :id")
-    Optional<PostHeaderDto> findPostDetailDto(@Param("id") Long id);
+    Optional<PostHeaderDto> findPostHeaderDto(@Param("id") Long id);
 
     @Query(MAIN_TITLE_SQL + "from Post p where p.head like %:head%")
     Page<PostHeaderDto> findMainTitleDtoByPostHead(@Param("head") String head, Pageable pageable);
