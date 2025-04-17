@@ -29,6 +29,8 @@ public class PostHeaderService {
     private final JpaPostRepository postRepository;
     private final CommentService commentService;
 
+    private final int PAGE_SIZE = 20;
+
     /**
      * 메인화면의 타이틀 목록을 가져옴
      * @param page 가져오고자 하는 페이지
@@ -49,24 +51,29 @@ public class PostHeaderService {
         catch (CacheNotFoundException e){
             log.error("[Cache miss] {}", e.getMessage());
 
+            Long maxPostId = postRepository.maxPostId();
+            long start = maxPostId - ((page - 1) * PAGE_SIZE) - 100;
+            long end = maxPostId - ((page - 1) * PAGE_SIZE);
+
             //페이지에 해당하는 게시글을 DB 에서 가져옴
-            PageRequest created = PageRequest.of(page - 1, 20, Sort.by("id").descending());
-            Page<Object[]> objectPage = postRepository.findPostList(created);
+            List<Object[]> objectPage = postRepository.findPostList(start, end);
 
             /**
              * 가져온 게시글들의 id 를 통해 캐시의 데이터 조회
              * 조회되지 않거나, ttl 이 지난 캐시들이 있어 페이지의 모든 게시글이 캐시에 존재하지 않을 수 있다.
              */
-            List<Long> list = objectPage.getContent().stream().map(o -> (Long) o[0]).toList();
+            List<Long> list = objectPage.stream().map(o -> (Long) o[0]).toList();
+
             //캐시에서 게시글의 조회수 반환, 없다면 null
             Map<Long, Long> views = redisService.getView(list);
 
             //가져온 캐시 데이터들로 dto list 를 생성, PageImpl 에 담아 반환
             List<PostHeaderDto> dtoList = getPostHeaderDtos(objectPage,views);
+
             dto = new PageImpl<>(
                     dtoList,
-                    objectPage.getPageable(),
-                    objectPage.getTotalElements()
+                    PageRequest.of(page-1, 20,Sort.by("id").descending()),
+                    1000000
             );
         }
 
@@ -79,12 +86,12 @@ public class PostHeaderService {
      * @param views 캐시에서 가져온 조회수, 없다면 null
      * @return
      */
-    private static List<PostHeaderDto> getPostHeaderDtos(Page<Object[]> objectPage,Map<Long, Long> views) {
+    private static List<PostHeaderDto> getPostHeaderDtos(List<Object[]> objectPage,Map<Long, Long> views) {
 
         List<PostHeaderDto> dtoList = new ArrayList<>();
 
         //각 필드에 맞게 header 초기화
-        for (Object[] content : objectPage.getContent()) {
+        for (Object[] content : objectPage) {
             PostHeaderDto header = new PostHeaderDto();
             Long key = (Long)content[0];
             header.setPost_id(key);

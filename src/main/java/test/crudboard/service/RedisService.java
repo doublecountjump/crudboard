@@ -78,7 +78,7 @@ public class RedisService {
         dto.setContext(post.getContext());
         dto.setCreated(post.getCreated());
         dto.setView(post.getView());
-        dto.setLike_count(post.getLike_count());
+        dto.setLike_count(0L);
         dto.setComment_count(0L);
         dto.setNickname(post.getUser().getNickname());
         dto.setTtl(DAY);

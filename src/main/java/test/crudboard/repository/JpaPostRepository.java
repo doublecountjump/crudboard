@@ -38,8 +38,10 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
             "(select count(l) from Like l where l.post.id = p.id),  " +
             "(select count(c) from Comment c where c.post.id = p.id), " +
             "p.user.nickname "+
-            "from Post p left join p.user u")
-    Page<Object[]> findPostList(Pageable page);
+            "from Post p left join p.user u " +
+            "where p.id between :start and :end " +
+            "order by p.id desc limit 20")
+    List<Object[]> findPostList(@Param("start")long start, @Param("end") long end);
 
     //jpa  에서 join문을 만들 때, 명시적으로 join 한 것만 join함. post의 user가 eager로 설정되어도, 지정하지 않으면  지연로딩 처리됨
     @Query(MAIN_TITLE_SQL +
@@ -71,6 +73,10 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     @Modifying
     @Query("UPDATE Post p SET p.view = p.view + 1 WHERE p.id = :postId")
     void IncrementViewCount(@Param("postId") Long postId);
+
+
+    @Query("select max(p.id) from Post p")
+    Long maxPostId();
 
 /*
 

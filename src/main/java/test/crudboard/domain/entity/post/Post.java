@@ -31,7 +31,6 @@ public class Post {
     private String head;
     private String context;
     private Long view;
-    private Long like_count;
 
     @CreatedDate
     @Column(updatable = false)

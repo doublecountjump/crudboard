@@ -57,7 +57,6 @@ public class  PostService{
                 .head(createPostDto.getHead())
                 .context(createPostDto.getContext())
                 .view(0L)
-                .like_count(0L)
                 .user(User.Quick(id))
                 .build();
 
