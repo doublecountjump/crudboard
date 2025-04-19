@@ -45,9 +45,6 @@ public class UserService {
         return userRepository.save(user);
     }
 
-    public User findUserByNickname(String name){
-        return userRepository.findUserByNickname(name).orElseThrow(()->new EntityNotFoundException("user not found"));
-    }
     public User findUserByEmail(String email){
         return userRepository.findUserByEmail(email)
                 .orElseThrow(()-> new UsernameNotFoundException("user not found"));
@@ -57,21 +54,9 @@ public class UserService {
         return userRepository.existsUserByIdAndNickname(userId, name);
     }
 
-
     public UserInfoDto getUserInfo(String name){
-        User user = userRepository.findUserByNickname(name).orElseThrow(() -> new EntityNotFoundException());
-
-        return UserInfoDto.builder()
-                .id(user.getId())
-                .username(user.getNickname())
-                .email(user.getEmail())
-                .githubId(user.getGithubId())
-                .avatar_url(user.getProfileImage())
-                .provider(user.getProvider())
-                .roles(user.getRoles())
-                .postList(user.getPostList())
-                .commentList(user.getCommentList())
-                .build();
+        User user = userRepository.findUserByNickname(name).orElseThrow(EntityNotFoundException::new);
+        return new UserInfoDto(user);
     }
 
 }

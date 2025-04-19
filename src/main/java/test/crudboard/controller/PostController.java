@@ -17,9 +17,8 @@ import test.crudboard.domain.entity.post.dto.PostDetailDto;
 import test.crudboard.domain.aop.valid.ResourceType;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.LikeService;
-import test.crudboard.service.PostHeaderService;
+import test.crudboard.service.PostRequestService;
 import test.crudboard.service.PostService;
-import test.crudboard.service.RedisService;
 
 
 /**
@@ -32,7 +31,7 @@ import test.crudboard.service.RedisService;
 public class PostController {
     private final PostService postService;
     private final LikeService likeService;
-    private final PostHeaderService postHeaderService;
+    private final PostRequestService postRequestService;
 
     @PreAuthorize("isAuthenticated()")
     @GetMapping("/create")
@@ -66,7 +65,7 @@ public class PostController {
                                 @AuthenticationPrincipal JwtUserDetails user, Model model){
 
         //게시글, 댓글 부분 각각 불러옴
-        PostDetailDto dto = postHeaderService.getPostDetailDtoById(postId, isRecommend);
+        PostDetailDto dto = postRequestService.getPostDetailDtoById(postId, isRecommend);
 
         model.addAttribute("header", dto.getHeader());
         model.addAttribute("footer", dto.getCommentList());

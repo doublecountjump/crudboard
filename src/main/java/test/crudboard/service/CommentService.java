@@ -29,7 +29,7 @@ public class CommentService {
         Comment save = commentRepository.save(comment);
 
         //캐시의 댓글 수 +1
-        redisService.increment(postId, "comment" , 1L);
+        redisService.increment(postId, COMMENT_COUNT , 1L);
 
         return save;
     }

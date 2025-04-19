@@ -1,11 +1,9 @@
 package test.crudboard.domain.entity.user.dto;
 
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import test.crudboard.domain.entity.comment.Comment;
+import test.crudboard.domain.entity.user.User;
 import test.crudboard.security.type.AuthProvider;
 import test.crudboard.security.type.Roles;
 import test.crudboard.domain.entity.post.Post;
@@ -14,8 +12,7 @@ import java.util.List;
 
 
 //사용자의 정보를 저장
-@Data
-@Builder
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserInfoDto {
@@ -26,6 +23,14 @@ public class UserInfoDto {
     private String githubId;
     private AuthProvider provider;
     private Roles roles;
-    private List<Post> postList;
-    private List<Comment> commentList;
+
+    public UserInfoDto(User user) {
+        this.id = user.getId();
+        this.username = user.getNickname();
+        this.email = user.getEmail();
+        this.avatar_url = user.getProfileImage();
+        this.githubId = user.getGithubId();
+        this.provider = user.getProvider();
+        this.roles = user.getRoles();
+    }
 }

@@ -19,7 +19,7 @@ import test.crudboard.domain.entity.user.dto.UserInfoDto;
 import test.crudboard.domain.entity.user.dto.UserJoinDto;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.repository.JpaUserRepository;
-import test.crudboard.service.PostHeaderService;
+import test.crudboard.service.PostRequestService;
 import test.crudboard.service.PostService;
 import test.crudboard.service.UserService;
 
@@ -30,7 +30,7 @@ public class MainController {
     private final UserService userService;
     private final PostService postService;
     private final JpaUserRepository userRepository;
-    private final PostHeaderService postHeaderService;
+    private final PostRequestService postRequestService;
 
     private final int PAGE_SIZE = 10;
     @GetMapping(value = {"","/","/{page}"})
@@ -49,7 +49,7 @@ public class MainController {
         }
 
         //해당하는 페이지의 게시글 목록 조회
-        Page<PostHeaderDto> titleList = postHeaderService.getTitleList(page,isRecommend);
+        Page<PostHeaderDto> titleList = postRequestService.getTitleList(page,isRecommend);
 
         //해당하는 페이지 블록 설정
         int startPage = getStartPage(page, PAGE_SIZE);

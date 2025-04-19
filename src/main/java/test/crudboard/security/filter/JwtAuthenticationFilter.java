@@ -49,12 +49,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 cookie.setMaxAge(0); // 즉시 만료
                 cookie.setPath("/");  // 쿠키의 경로 설정
                 response.addCookie(cookie);
-
                 // Security Context 초기화
                 SecurityContextHolder.clearContext();
-
                 throw new TokenExpiredException(ErrorCode.JWT_TOKEN_HAS_EXPIRED);
-
             }
             if (jwtService.validToken(token)) {
                 Claims claims = jwtService.parseClaims(token);

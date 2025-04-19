@@ -62,8 +62,6 @@ public class  PostService{
 
         Post save = postRepository.save(post);
 
-        redisService.savePostHeader(save);
-
         return save;
     }
 
@@ -98,6 +96,12 @@ public class  PostService{
     }
 
     public Page<PostHeaderDto> searchPostByHead(String text, PageRequest created) {
+        int page = created.getPageNumber() - 1;
+        Long max = postRepository.maxPostId();
+
+        long startPage = max - (10000L * page);
+        long endPage = max - (10000L * page + 1);
+
         return postRepository.findMainTitleDtoByPostHead(text, created);
     }
 

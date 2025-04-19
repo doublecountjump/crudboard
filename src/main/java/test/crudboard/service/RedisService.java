@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
 import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.post.dto.PostHeader;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
@@ -50,18 +51,23 @@ public class RedisService {
     public static final Long HOUR = 60 * 60L;
     public static final Long DAY = 60 * 60 * 12L;
 
-    public void savePostHeader(Post post) {
-        //post 를 토대로 postHeader 생성
-        PostHeader dto = init(post);
 
-        PostHeader save = redisRepository.save(dto);
+    // dto 를 받아서, 캐시에 저장
+    @Transactional
+    public void addHeader(PostHeaderDto dto) {
+        PostHeader header = new PostHeader(dto);
+        header.setTtl(HOUR);
 
-        String key = getZsetKey(LocalDate.now());
-        String postId = save.getPost_id().toString();
-        Long score = save.getPost_id();
+        savePostHeader(header);
+        template.opsForHash().increment(POST + header.getPost_id(), VIEW,1);
+    }
 
-        //캐시에 저장된 게시글 목록에 저장
-        template.opsForZSet().add(key, postId, score);
+    public void savePostHeader(PostHeader header) {
+        PostHeader save = redisRepository.save(header);
+        Long postId = save.getPost_id();
+        String key = getZsetKey(header.getCreated().toLocalDate());
+
+        template.opsForZSet().add(key, String.valueOf(postId), postId);
 
         //이번달 저장된 게시글 개수
         Long total = template.opsForZSet().zCard(key);
@@ -70,39 +76,14 @@ public class RedisService {
         }
     }
 
-    //postHeader 생성 메서드
-    private static PostHeader init(Post post) {
-        PostHeader dto = new PostHeader();
-        dto.setPost_id(post.getId());
-        dto.setHead(post.getHead());
-        dto.setContext(post.getContext());
-        dto.setCreated(post.getCreated());
-        dto.setView(post.getView());
-        dto.setLike_count(0L);
-        dto.setComment_count(0L);
-        dto.setNickname(post.getUser().getNickname());
-        dto.setTtl(DAY);
-        return dto;
-    }
-
-    // dto 를 받아서, 캐시에 저장
-    public void addHeader(PostHeaderDto dto) {
-        PostHeader header = new PostHeader(dto);
-        header.setTtl(HOUR);
-
-        PostHeader save = redisRepository.save(header);
-        template.opsForHash().increment("post:" + save.getPost_id(), VIEW,1);
-    }
-
-
     //날짜에 해당하는 페이지 목록 키를 반환
     public String getZsetKey(LocalDate localDate){
-        return "post:" + localDate.getYear() + ":" +localDate.getMonthValue();
+        return POST  + localDate.getYear() + ":" +localDate.getMonthValue();
     }
 
     public PostHeader getPostHeader(Long postId) {
         PostHeader header = redisRepository.findById(postId).orElseThrow(() -> new CacheNotFoundException(NO_DATA_EXISTS_IN_CACHE));
-        template.opsForHash().increment("post:" + header.getPost_id(), VIEW, 1);
+        template.opsForHash().increment(POST, VIEW, 1);
         return header;
     }
 
@@ -135,7 +116,7 @@ public class RedisService {
         return new PageImpl<>(
                 list,
                 PageRequest.of(page - 1, pageSize), // Spring Data는 0부터 시작하는 페이지 번호 사용
-                postRepository.count()
+                1000000
         );
 
     }

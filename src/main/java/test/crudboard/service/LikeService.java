@@ -10,6 +10,7 @@ import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.user.User;
 import test.crudboard.domain.error.AlreadyLikedException;
 import test.crudboard.domain.error.ErrorCode;
+import test.crudboard.domain.type.RedisField;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.JpaUserRepository;
 import test.crudboard.repository.LikeRepository;
@@ -18,8 +19,7 @@ import test.crudboard.repository.LikeRepository;
 @RequiredArgsConstructor
 public class LikeService {
     private final LikeRepository likeRepository;
-    private final JpaUserRepository userRepository;
-    private final JpaPostRepository postRepository;
+    private final RedisService redisService;
 
     /**
      * 게시글의 추천 목록을 추가하는 메서드
@@ -42,6 +42,7 @@ public class LikeService {
                     .post(Post.Quick(postId))
                     .build();
             likeRepository.save(like);
+            redisService.increment(postId, RedisField.LIKE_COUNT, 1L);
         }
     }
 }

@@ -72,7 +72,7 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
 
     @Modifying
     @Query("UPDATE Post p SET p.view = p.view + 1 WHERE p.id = :postId")
-    void IncrementViewCount(@Param("postId") Long postId);
+    void incrementViewCount(@Param("postId") Long postId);
 
 
     @Query("select max(p.id) from Post p")

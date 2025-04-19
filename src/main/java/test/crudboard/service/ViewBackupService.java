@@ -6,13 +6,18 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ScanOptions;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 import test.crudboard.domain.entity.post.Post;
+import test.crudboard.repository.BackUpRepository;
 import test.crudboard.repository.JpaPostRepository;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static test.crudboard.domain.type.RedisField.POST;
 import static test.crudboard.domain.type.RedisField.VIEW;
@@ -23,6 +28,7 @@ import static test.crudboard.domain.type.RedisField.VIEW;
 public class ViewBackupService {
     private final RedisTemplate<String, String> redisTemplate;
     private final JpaPostRepository postRepository;
+    private final BackUpRepository backUpRepository;
 
     @Scheduled(fixedRate = 60 * 1000) // 5분마다 실행
     public void backupViewCounts() {
@@ -33,7 +39,7 @@ public class ViewBackupService {
                 .build();
 
         Cursor<String> cursor = redisTemplate.scan(options);
-        List<Post> posts = new ArrayList<>();
+        Map<Long,Long> views = new HashMap<>();
 
         try {
             while (cursor.hasNext()) {
@@ -45,16 +51,11 @@ public class ViewBackupService {
                         String viewCount = (String) redisTemplate.opsForHash().get(key, VIEW);
 
                         if (viewCount != null) {
-                            Post post = postRepository.findById(postId).orElse(null);
-                            if (post != null) {
-                                post.setView(Long.parseLong(viewCount));
-                                posts.add(post);
+                            views.put(postId, Long.parseLong(viewCount));
 
-                                if (posts.size() >= 500) {
-                                    postRepository.saveAll(posts);
-                                    log.info("Backed up view counts for batch of {} posts", posts.size());
-                                    posts.clear();
-                                }
+                            if(views.size() >= 500){
+                                backUpRepository.jdbcBatchUpdate(views);
+                                views.clear();
                             }
                         }
                     }
@@ -64,12 +65,13 @@ public class ViewBackupService {
             }
 
             // 남은 포스트 처리
-            if (!posts.isEmpty()) {
-                postRepository.saveAll(posts);
-                log.info("Backed up view counts for final batch of {} posts", posts.size());
+            if (!views.isEmpty()) {
+                backUpRepository.jdbcBatchUpdate(views);
+                log.info("Backed up view counts for final batch of {} posts", views.size());
             }
         } finally {
             cursor.close(); // 리소스 해제 필수
         }
     }
 }
+
