@@ -10,7 +10,7 @@ import org.springframework.security.authentication.AuthenticationCredentialsNotF
 import org.springframework.stereotype.Component;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.CommentService;
-import test.crudboard.service.PostService;
+import test.crudboard.service.post.PostService;
 import test.crudboard.service.UserService;
 
 

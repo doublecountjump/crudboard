@@ -35,8 +35,8 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
             countQuery = "SELECT COUNT(*) FROM post",
             nativeQuery = true)*/
     @Query("select p.id, p.head, p.context, p.view, p.created, "+
-            "(select count(l) from Like l where l.post.id = p.id),  " +
-            "(select count(c) from Comment c where c.post.id = p.id), " +
+            "(select count(l.id) from Like l where l.post.id = p.id),  " +
+            "(select count(c.id) from Comment c where c.post.id = p.id), " +
             "p.user.nickname "+
             "from Post p left join p.user u " +
             "where p.id between :start and :end " +

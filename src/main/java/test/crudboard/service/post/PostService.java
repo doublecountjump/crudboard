@@ -1,4 +1,4 @@
-package test.crudboard.service;
+package test.crudboard.service.post;
 
 
 import jakarta.persistence.EntityNotFoundException;
@@ -7,20 +7,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import test.crudboard.domain.entity.comment.Comment;
 import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.post.dto.CreatePostDto;
-import test.crudboard.domain.entity.post.dto.PostDetailDto;
-import test.crudboard.domain.entity.post.dto.PostHeader;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.entity.user.User;
-import test.crudboard.domain.error.CacheNotFoundException;
 import test.crudboard.repository.JpaPostRepository;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
-
-import java.time.LocalDateTime;
-import java.util.*;
+import test.crudboard.service.CommentService;
+import test.crudboard.service.RedisService;
 
 import static test.crudboard.domain.type.RedisField.*;
 

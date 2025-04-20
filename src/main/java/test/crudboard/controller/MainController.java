@@ -19,8 +19,8 @@ import test.crudboard.domain.entity.user.dto.UserInfoDto;
 import test.crudboard.domain.entity.user.dto.UserJoinDto;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.repository.JpaUserRepository;
-import test.crudboard.service.PostRequestService;
-import test.crudboard.service.PostService;
+import test.crudboard.service.post.PostRequestService;
+import test.crudboard.service.post.PostService;
 import test.crudboard.service.UserService;
 
 @Controller

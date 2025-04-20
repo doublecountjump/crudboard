@@ -1,8 +1,9 @@
-package test.crudboard.service;
+package test.crudboard.service.post;
 
 
 import io.lettuce.core.RedisConnectionException;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -10,17 +11,17 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import test.crudboard.domain.entity.comment.Comment;
 import test.crudboard.domain.entity.post.dto.PostDetailDto;
 import test.crudboard.domain.entity.post.dto.PostHeader;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.error.CacheNotFoundException;
 import test.crudboard.repository.JpaPostRepository;
+import test.crudboard.service.CommentService;
+import test.crudboard.service.RedisService;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -38,12 +39,9 @@ public class PostRequestService {
      * 메인화면의 타이틀 목록을 가져옴
      * @param page 가져오고자 하는 페이지
      */
-/*    public Page<PostHeaderDto> getTitleList(Integer page, boolean isRecommend){
+    public Page<PostHeaderDto> getTitleList(Integer page, boolean isRecommend){
         Page<PostHeaderDto> dto;
-        *//**
-         * 캐시에 먼저 데이터가 있는지 확인하고 없거나 부족하다면 DB 에서 데이터를 가져옴
-         * 그리고 캐시에 저장
-         *//*
+
             Long maxPostId = postRepository.maxPostId();
             long start = maxPostId - ((page - 1) * PAGE_SIZE) - 100;
             long end = maxPostId - ((page - 1) * PAGE_SIZE);
@@ -80,52 +78,32 @@ public class PostRequestService {
 
 
         return dto;
-    }*/
-    public Page<PostHeaderDto> getTitleList(Integer page, boolean isRecommend){
-        long logstart = 0L;
-        long logend;
-        Page<PostHeaderDto> dto;
-        /**
-         * 캐시에 먼저 데이터가 있는지 확인하고 없거나 부족하다면 DB 에서 데이터를 가져옴
-         * 그리고 캐시에 저장*/
-
-        try {
-            //캐시에서 데이터를 가져옴
-            dto = redisService.getTitleList(page);
-
-        }
-        catch (CacheNotFoundException e){
-            log.error("[Cache miss] {}", e.getMessage());
-
-            Long maxPostId = postRepository.maxPostId();
-            long start = maxPostId - ((page - 1) * PAGE_SIZE) - 100;
-            long end = maxPostId - ((page - 1) * PAGE_SIZE);
-
-            //페이지에 해당하는 게시글을 DB 에서 가져옴
-            List<Object[]> objectPage = postRepository.findPostList(start, end);
-            System.out.println("page size : "+ objectPage.size());
-            /**
-             * 가져온 게시글들의 id 를 통해 캐시의 데이터 조회
-             * 조회되지 않거나, ttl 이 지난 캐시들이 있어 페이지의 모든 게시글이 캐시에 존재하지 않을 수 있다.*/
-
-            List<Long> list = objectPage.stream().map(o -> (Long) o[0]).toList();
-
-            //캐시에서 게시글의 조회수 반환, 없다면 null
-            Map<Long, Long> views = redisService.getView(list);
-
-
-            //가져온 캐시 데이터들로 dto list 를 생성, PageImpl 에 담아 반환
-            List<PostHeaderDto> dtoList = getPostHeaderDtos(objectPage,views);
-
-            dto = new PageImpl<>(
-                    dtoList,
-                    PageRequest.of(page-1, 20,Sort.by("id").descending()),
-                    1000000
-            );
-        }
-
-        return dto;
     }
+//    public Page<PostHeaderDto> getTitleList(Integer page, boolean isRecommend){
+//
+//            Long maxPostId = postRepository.maxPostId();
+//            long startPage = maxPostId - ((page - 1) * PAGE_SIZE) - 100;
+//            long endPage = maxPostId - ((page - 1) * PAGE_SIZE);
+//
+//            List<Object[]> objectPage = postRepository.findPostList(startPage, endPage);
+//
+//            /**
+//             * 가져온 게시글들의 id 를 통해 캐시의 데이터 조회
+//             * 조회되지 않거나, ttl 이 지난 캐시들이 있어 페이지의 모든 게시글이 캐시에 존재하지 않을 수 있다.*/
+//            List<Long> list = objectPage.stream().map(o -> (Long) o[0]).toList();
+//
+//            //캐시에서 게시글의 조회수 반환, 없다면 null
+//            Map<Long, Long> views = redisService.getView(list);
+//
+//            //가져온 캐시 데이터들로 dto list 를 생성, PageImpl 에 담아 반환
+//            List<PostHeaderDto> dtoList = getPostHeaderDtos(objectPage,views);
+//
+//            return new PageImpl<>(
+//                    dtoList,
+//                    PageRequest.of(page-1, 20,Sort.by("id").descending()),
+//                    10000  //500페이지로 제한
+//            );
+//    }
 
     /**
      *
@@ -167,21 +145,21 @@ public class PostRequestService {
      * @param postId 게시글의 id
      * @return
      */
-/*    @Transactional
-    public PostDetailDto getPostDetailDtoById(Long postId, boolean isRecommend){
-        //댓글을 먼저 가져욤
-        List<Comment> footer = commentService.getCommentList(postId);
-        PostHeaderDto header;
-
-
-            //캐시에 없으면 DB 에서 데이터 조회
-            header = postRepository.findPostHeaderDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
-            postRepository.incrementViewCount(header.getPost_id());
-            //그리고 캐시에 저
-
-
-        return new PostDetailDto(header, footer);
-    }*/
+//    @Transactional
+//    public PostDetailDto getPostDetailDtoById(Long postId, boolean isRecommend){
+//        //댓글을 먼저 가져욤
+//        List<Comment> footer = commentService.getCommentList(postId);
+//        PostHeaderDto header;
+//
+//
+//            //캐시에 없으면 DB 에서 데이터 조회
+//            header = postRepository.findPostHeaderDto(postId).orElseThrow(() -> new EntityNotFoundException("entity not found"));
+//            postRepository.incrementViewCount(header.getPost_id());
+//            //그리고 캐시에 저
+//
+//
+//        return new PostDetailDto(header, footer);
+//    }
 
 
     public PostDetailDto getPostDetailDtoById(Long postId, boolean isRecommend){

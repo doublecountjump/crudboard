@@ -1,9 +1,11 @@
 package test.crudboard.service;
 
 
+import com.nimbusds.jose.Header;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.ast.Call;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +19,7 @@ import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.post.dto.PostHeader;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 import test.crudboard.domain.error.CacheNotFoundException;
+import test.crudboard.domain.error.ErrorCode;
 import test.crudboard.repository.JpaPostRepository;
 import test.crudboard.repository.RedisRepository;
 
@@ -30,8 +33,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static test.crudboard.domain.error.ErrorCode.*;
-import static test.crudboard.domain.type.RedisField.POST;
-import static test.crudboard.domain.type.RedisField.VIEW;
+import static test.crudboard.domain.type.RedisField.*;
 
 
 /**
@@ -53,27 +55,12 @@ public class RedisService {
 
 
     // dto 를 받아서, 캐시에 저장
-    @Transactional
     public void addHeader(PostHeaderDto dto) {
         PostHeader header = new PostHeader(dto);
         header.setTtl(HOUR);
 
-        savePostHeader(header);
-        template.opsForHash().increment(POST + header.getPost_id(), VIEW,1);
-    }
-
-    public void savePostHeader(PostHeader header) {
         PostHeader save = redisRepository.save(header);
-        Long postId = save.getPost_id();
-        String key = getZsetKey(header.getCreated().toLocalDate());
-
-        template.opsForZSet().add(key, String.valueOf(postId), postId);
-
-        //이번달 저장된 게시글 개수
-        Long total = template.opsForZSet().zCard(key);
-        if(total >= 100000L){
-            log.warn("이번달 게시글 목록의 저장 수가 10만개를 넘어섰습니다.");
-        }
+        template.opsForHash().increment(POST + header.getPost_id(), VIEW,1);
     }
 
     //날짜에 해당하는 페이지 목록 키를 반환
@@ -82,9 +69,33 @@ public class RedisService {
     }
 
     public PostHeader getPostHeader(Long postId) {
-        PostHeader header = redisRepository.findById(postId).orElseThrow(() -> new CacheNotFoundException(NO_DATA_EXISTS_IN_CACHE));
-        template.opsForHash().increment(POST, VIEW, 1);
-        return header;
+        String key = POST + postId;
+        List<Object> result = template.executePipelined((RedisCallback<?>) call -> {
+            StringRedisConnection con = (StringRedisConnection) call;
+            con.hGetAll(key);
+            con.hIncrBy(key,VIEW,1);
+
+            return null;
+        });
+
+        Map<String, String> field = (Map<String, String>) result.get(0);
+
+        if(field.size() < 5){
+            throw new CacheNotFoundException(NO_DATA_EXISTS_IN_CACHE);
+        }
+
+        System.out.println(field.keySet());
+        System.out.println(field.values());
+        PostHeader dto = new PostHeader();
+        dto.setPost_id(Long.parseLong(field.get("post_id")));
+        dto.setHead(field.get(HEAD));
+        dto.setContext(field.get(CONTEXT));
+        dto.setNickname(field.get(NICKNAME));
+        dto.setCreated(LocalDateTime.parse(field.get(CREATED)));
+        dto.setView(Long.parseLong(field.get(VIEW)));
+        dto.setComment_count(Long.parseLong(field.get(COMMENT_COUNT)));
+        dto.setLike_count(Long.parseLong(field.get(LIKE_COUNT)));
+        return dto;
     }
 
 
@@ -98,20 +109,11 @@ public class RedisService {
         List<PostHeaderDto> list = new ArrayList<>();
 
         if(size < pageSize){
-            addPostHeaderDtos(list, key, 0, size);
-
-            String newKey = getZsetKey(LocalDate.now().minusMonths(1L));
-
-            addPostHeaderDtos(list,newKey,0,end - size);
+            throw new CacheNotFoundException(INSUFFICIENT_DATA_IN_CACHE);
         }
         else {
             addPostHeaderDtos(list,key, start, end);
         }
-
-        if(list.size() < pageSize){
-            throw new CacheNotFoundException(INSUFFICIENT_DATA_IN_CACHE);
-        }
-
 
         return new PageImpl<>(
                 list,
@@ -131,10 +133,30 @@ public class RedisService {
                 .map(Long::parseLong)
                 .toList();
 
-        Iterable<PostHeader> allById = redisRepository.findAllById(postIds);
+        List<Object> objects = template.executePipelined((RedisCallback<?>) call -> {
+            StringRedisConnection conn = (StringRedisConnection) call;
+            for (Long postId : postIds) {
+                conn.hGetAll(POST + postId.toString());
+            }
 
-        for (PostHeader postHeader : allById) {
-            list.add(new PostHeaderDto(postHeader));
+            return null;
+        });
+
+        for (Object o : objects) {
+            Map<String, String> field = (Map<String, String>) o;
+            System.out.println(field.keySet());
+            System.out.println(field.values());
+            PostHeaderDto dto = new PostHeaderDto();
+            dto.setPost_id(Long.parseLong(field.get("post_id")));
+            dto.setHead(field.get(HEAD));
+            dto.setContext(field.get(CONTEXT));
+            dto.setNickname(field.get(NICKNAME));
+            dto.setCreated(LocalDateTime.parse(field.get(CREATED)));
+            dto.setView(Long.parseLong(field.get(VIEW)));
+            dto.setComment_count(Long.parseLong(field.get(COMMENT_COUNT)));
+            dto.setLike_count(Long.parseLong(field.get(LIKE_COUNT)));
+
+            list.add(dto);
         }
     }
 

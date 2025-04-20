@@ -17,8 +17,8 @@ import test.crudboard.domain.entity.post.dto.PostDetailDto;
 import test.crudboard.domain.aop.valid.ResourceType;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.LikeService;
-import test.crudboard.service.PostRequestService;
-import test.crudboard.service.PostService;
+import test.crudboard.service.post.PostRequestService;
+import test.crudboard.service.post.PostService;
 
 
 /**
