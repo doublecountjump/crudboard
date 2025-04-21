@@ -24,11 +24,9 @@ public class CommentService {
 
     public Comment saveParentComment(Long postId, String context, Long userId){
 
-        //부모 댓글 생성
         Comment comment = getComment(postId,context, userId, null);
         Comment save = commentRepository.save(comment);
 
-        //캐시의 댓글 수 +1
         redisService.increment(postId, COMMENT_COUNT , 1L);
 
         return save;
@@ -36,11 +34,9 @@ public class CommentService {
 
     public Comment saveChildComment(Long postId, Long parentId, String content, Long userId) {
 
-        //자식 댓글 생성
         Comment child = getComment(postId, content, userId, parentId);
         Comment save = commentRepository.save(child);
 
-        //캐시의 댓글 수 +1
         redisService.increment(postId, COMMENT_COUNT, 1L);
 
         return save;
@@ -66,16 +62,11 @@ public class CommentService {
         return comment;
     }
 
-
-    /**
-     * @param postId 를 가진 게시글의 댓글들 반환
-     */
     public List<Comment> getCommentList(Long postId){
         return commentRepository.findCommentsByPostId(postId);
     }
 
     public void deleteComment(Long postId, Long commentId) {
-
         /**
          * 부모 댓글 삭제의 경우, 자식 댓글들 까지 모두 삭제되기 때문에
          * 댓글 삭제 후 게시글의 총 댓글수를 구한 후 캐시에 저장한다
@@ -83,10 +74,7 @@ public class CommentService {
         commentRepository.deleteCommentById(commentId);
         long count = commentRepository.countByPostId(postId);
 
-        //구한 총 댓글 수 캐시에 저장
         redisService.update(postId,COMMENT_COUNT,String.valueOf(count));
-
-        log.info("delete comment : {}" ,commentId);
     }
 
     //댓글 주인 검증

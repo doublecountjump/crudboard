@@ -30,15 +30,6 @@ public class  PostService{
     private final CommentService commentService;
     private final RedisService redisService;
 
-/*    @PostConstruct
-    public void init(){
-        PageRequest pageRequest = PageRequest.of(0, 50000);
-        List<Post> allLimit200 = postRepository.findAllLimit(pageRequest);
-        for (Post post : allLimit200) {
-            redisService.savePostHeader(post);
-        }
-    }*/
-
     public Post findById(Long id){
         return postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
     }
@@ -90,12 +81,6 @@ public class  PostService{
     }
 
     public Page<PostHeaderDto> searchPostByHead(String text, PageRequest created) {
-        int page = created.getPageNumber() - 1;
-        Long max = postRepository.maxPostId();
-
-        long startPage = max - (10000L * page);
-        long endPage = max - (10000L * page + 1);
-
         return postRepository.findMainTitleDtoByPostHead(text, created);
     }
 

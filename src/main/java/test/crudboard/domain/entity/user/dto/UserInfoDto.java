@@ -2,13 +2,9 @@ package test.crudboard.domain.entity.user.dto;
 
 
 import lombok.*;
-import test.crudboard.domain.entity.comment.Comment;
 import test.crudboard.domain.entity.user.User;
 import test.crudboard.security.type.AuthProvider;
 import test.crudboard.security.type.Roles;
-import test.crudboard.domain.entity.post.Post;
-
-import java.util.List;
 
 
 //사용자의 정보를 저장

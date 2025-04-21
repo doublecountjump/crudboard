@@ -3,7 +3,6 @@ package test.crudboard.domain.entity.token;
 
 import jakarta.persistence.*;
 import lombok.*;
-
 import java.time.LocalDateTime;
 
 @Data
