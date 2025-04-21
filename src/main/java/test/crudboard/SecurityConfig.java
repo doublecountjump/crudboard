@@ -7,14 +7,13 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import test.crudboard.filter.JwtAuthenticationFilter;
-import test.crudboard.provider.LoginSuccessHandler;
-import test.crudboard.provider.local.LocalUserDetailsService;
-import test.crudboard.provider.local.LocalUserProvider;
+import test.crudboard.security.filter.JwtAuthenticationFilter;
+import test.crudboard.security.provider.LoginSuccessHandler;
+import test.crudboard.security.provider.local.LocalUserDetailsService;
+import test.crudboard.security.provider.local.LocalUserProvider;
+import test.crudboard.service.JwtService;
 import test.crudboard.service.LogoutService;
 
 @Configuration
@@ -57,4 +56,8 @@ public class SecurityConfig {
         return http.build();
     }
 
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwtService) {
+        return new JwtAuthenticationFilter(jwtService);
+    }
 }

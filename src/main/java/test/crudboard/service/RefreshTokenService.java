@@ -1,7 +1,6 @@
 package test.crudboard.service;
 
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
@@ -12,8 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
-import test.crudboard.entity.Token;
-import test.crudboard.entity.User;
+import test.crudboard.domain.entity.token.Token;
 import test.crudboard.repository.TokenRepository;
 
 import javax.crypto.SecretKey;
@@ -63,6 +61,7 @@ public class RefreshTokenService {
         if(validRefreshToken(token)){
             return jwtService.generateToken(token.getEmail());
         }else throw new BadCredentialsException("bad");     //에러 수정하기
+
     }
 
     private SecretKey getSecretKey(){

@@ -12,21 +12,16 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientProperties;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.WebUtils;
-import test.crudboard.entity.Token;
-import test.crudboard.entity.User;
-import test.crudboard.repository.JpaUserRepository;
-import test.crudboard.repository.TokenRepository;
+import test.crudboard.domain.entity.user.User;
+import test.crudboard.domain.error.ErrorCode;
+import test.crudboard.domain.error.TokenExpiredException;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.Date;
 
 @Service
@@ -40,7 +35,10 @@ public class JwtService {
     @Value("${jwt.secret}")
     private String secretKey;
 
-    //토큰 생성 메서드
+    /**
+     * 토큰 생성 메서드, 사용자를 찾아서 사용자의 id와 닉네임, 권한을 jwt 에 저장한다.
+     * @param email
+     */
     public String generateToken(String email){
         User user = userService.findUserByEmail(email);
 
@@ -49,7 +47,8 @@ public class JwtService {
         }
 
         Claims claims = Jwts.claims();
-        claims.put("id", user.getNickname());
+        claims.put("id", user.getId());
+        claims.put("nickname", user.getNickname());
         claims.put("roles", user.getRoles().toString());
 
         return Jwts.builder()
@@ -58,7 +57,6 @@ public class JwtService {
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + (60 * 1000)))
                 .compact();
-
     }
 
     /**
@@ -66,7 +64,7 @@ public class JwtService {
      * @param token
      * @return true : 블랙리스트에 존재, false : 블랙리스트에 없음
      */
-    private boolean isTokenBlacklisted(String token) {
+    public boolean isTokenBlacklisted(String token) {
        return Boolean.TRUE.equals(template.hasKey("blacklist:" + token));
     }
 
@@ -76,16 +74,17 @@ public class JwtService {
             Jwts.parserBuilder()
                     .setSigningKey(getSecretKey())
                     .build()
-                    .parseClaimsJws(token);
+                    .parseClaimsJws(token); //토큰 파싱, 서명 검증, 그리고 토큰의 만료 검증도 포함함
 
             return true;
         }catch (ExpiredJwtException e) {
-            throw e;
-        } catch (JwtException e) {     //에러 구체적으로?
+            throw new TokenExpiredException(ErrorCode.JWT_TOKEN_HAS_EXPIRED);
+        } catch (JwtException e) {
             return false;
         }
     }
 
+    //request 에서 토큰 추출
     public String extractToken(HttpServletRequest request){
         Cookie jwtCookie = WebUtils.getCookie(request, "jwt");
         if(jwtCookie == null){
