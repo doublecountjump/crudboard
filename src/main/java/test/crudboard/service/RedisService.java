@@ -99,66 +99,6 @@ public class RedisService {
     }
 
 
-    public Page<PostHeaderDto> getTitleList(Integer page) {
-        int pageSize = 20;
-        long start = (long) (page - 1) * pageSize;
-        long end = start + pageSize - 1;
-
-        String key = getZsetKey(LocalDate.now());
-        Long size = template.opsForZSet().zCard(key);
-        List<PostHeaderDto> list = new ArrayList<>();
-
-        if(size < pageSize){
-            throw new CacheNotFoundException(INSUFFICIENT_DATA_IN_CACHE);
-        }
-        else {
-            addPostHeaderDtos(list,key, start, end);
-        }
-
-        return new PageImpl<>(
-                list,
-                PageRequest.of(page - 1, pageSize), // Spring Data는 0부터 시작하는 페이지 번호 사용
-                1000000
-        );
-
-    }
-
-    private void addPostHeaderDtos(List<PostHeaderDto> list,String key, long start, long end) {
-        Set<String> zkeys = template.opsForZSet().reverseRange(key, start, end);
-        if (zkeys == null || zkeys.isEmpty()) {
-            return;
-        }
-
-        List<Long> postIds = zkeys.stream()
-                .map(Long::parseLong)
-                .toList();
-
-        List<Object> objects = template.executePipelined((RedisCallback<?>) call -> {
-            StringRedisConnection conn = (StringRedisConnection) call;
-            for (Long postId : postIds) {
-                conn.hGetAll(POST + postId.toString());
-            }
-
-            return null;
-        });
-
-        for (Object o : objects) {
-            Map<String, String> field = (Map<String, String>) o;
-            System.out.println(field.keySet());
-            System.out.println(field.values());
-            PostHeaderDto dto = new PostHeaderDto();
-            dto.setPost_id(Long.parseLong(field.get("post_id")));
-            dto.setHead(field.get(HEAD));
-            dto.setContext(field.get(CONTEXT));
-            dto.setNickname(field.get(NICKNAME));
-            dto.setCreated(LocalDateTime.parse(field.get(CREATED)));
-            dto.setView(Long.parseLong(field.get(VIEW)));
-            dto.setComment_count(Long.parseLong(field.get(COMMENT_COUNT)));
-            dto.setLike_count(Long.parseLong(field.get(LIKE_COUNT)));
-
-            list.add(dto);
-        }
-    }
 
     public void deleteCacheById(Long id) {
         Post post = postRepository.findById(id).orElseThrow(() -> new EntityNotFoundException("존재하지 않는 게시글입니다."));
