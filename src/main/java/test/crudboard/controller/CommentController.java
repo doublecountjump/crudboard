@@ -27,7 +27,7 @@ public class CommentController {
         //부모 댓글 저장
         commentService.saveParentComment(postId, content, user.getId());
 
-        return "redirect:/post/" + postId;
+        return "redirect:/post/detail/" + postId;
     }
 
     @PostMapping("/{postId}/{parentId}")
@@ -37,7 +37,7 @@ public class CommentController {
         //자식 댓글 저장
         commentService.saveChildComment(postId, parentId, content, user.getId());
 
-        return "redirect:/post/" + postId;
+        return "redirect:/post/detail/" + postId;
     }
 
 
