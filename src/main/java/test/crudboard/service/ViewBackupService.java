@@ -26,7 +26,7 @@ import static test.crudboard.domain.type.RedisField.VIEW;
 @RequiredArgsConstructor
 @Slf4j
 public class ViewBackupService {
-    private final RedisTemplate<String, Object> redisTemplate;
+    private final RedisTemplate<String, String> redisTemplate;
     private final JpaPostRepository postRepository;
     private final BackUpRepository backUpRepository;
 
@@ -48,15 +48,10 @@ public class ViewBackupService {
                     if (key.matches(POST + "\\d+$")) {
                         String postIdStr = key.substring(POST.length());
                         Long postId = Long.parseLong(postIdStr);
-                        Object viewCount = redisTemplate.opsForHash().get(key, VIEW);
-                        String view;
-                        if (viewCount instanceof Integer) {
-                            view = String.valueOf(viewCount);
-                        } else {
-                            view = (String) viewCount;
-                        }
-                        if (view != null) {
-                            views.put(postId, Long.parseLong(view));
+                        String viewCount = (String) redisTemplate.opsForHash().get(key, VIEW);
+
+                        if (viewCount != null) {
+                            views.put(postId, Long.parseLong(viewCount));
 
                             if(views.size() >= 500){
                                 backUpRepository.jdbcBatchUpdate(views);
