@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Service
 @RequiredArgsConstructor
 public class LogoutService {
-    private final RedisTemplate<String, String> template;
+    private final RedisTemplate<String, Object> template;
     private final JwtService jwtService;
 
     /**

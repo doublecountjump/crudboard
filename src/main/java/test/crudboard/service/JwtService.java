@@ -30,7 +30,7 @@ import java.util.Date;
 @Slf4j
 public class JwtService {
     private final UserService userService;
-    private final RedisTemplate<String, String> template;
+    private final RedisTemplate<String, Object> template;
 
     @Value("${jwt.secret}")
     private String secretKey;

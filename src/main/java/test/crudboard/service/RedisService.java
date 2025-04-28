@@ -46,7 +46,7 @@ import static test.crudboard.domain.type.RedisField.*;
 @Slf4j
 public class RedisService {
     private final RedisRepository redisRepository;
-    private final RedisTemplate<String,String> template;
+    private final RedisTemplate<String,Object> template;
     private final JpaPostRepository postRepository;
 
     public static final Long MINUTE = 60L;
@@ -70,32 +70,10 @@ public class RedisService {
 
     public PostHeader getPostHeader(Long postId) {
         String key = POST + postId;
-        List<Object> result = template.executePipelined((RedisCallback<?>) call -> {
-            StringRedisConnection con = (StringRedisConnection) call;
-            con.hGetAll(key);
-            con.hIncrBy(key,VIEW,1);
 
-            return null;
-        });
+        PostHeader header = redisRepository.findById(postId).orElseThrow(() -> new CacheNotFoundException(NO_DATA_EXISTS_IN_CACHE));
 
-        Map<String, String> field = (Map<String, String>) result.get(0);
-
-        if(field.size() < 5){
-            throw new CacheNotFoundException(NO_DATA_EXISTS_IN_CACHE);
-        }
-
-        System.out.println(field.keySet());
-        System.out.println(field.values());
-        PostHeader dto = new PostHeader();
-        dto.setPost_id(Long.parseLong(field.get("post_id")));
-        dto.setHead(field.get(HEAD));
-        dto.setContext(field.get(CONTEXT));
-        dto.setNickname(field.get(NICKNAME));
-        dto.setCreated(LocalDateTime.parse(field.get(CREATED)));
-        dto.setView(Long.parseLong(field.get(VIEW)));
-        dto.setComment_count(Long.parseLong(field.get(COMMENT_COUNT)));
-        dto.setLike_count(Long.parseLong(field.get(LIKE_COUNT)));
-        return dto;
+        return header;
     }
 
 
@@ -135,9 +113,8 @@ public class RedisService {
     public Map<Long, Long> getView(List<Long> list) {
         List<Object> keys = template.executePipelined(
                 (RedisCallback<?>) call -> {
-                    StringRedisConnection connection = (StringRedisConnection) call;
                     for (Long key : list) {
-                        connection.hGet(POST + String.valueOf(key), VIEW);
+                        call.hashCommands().hGet((POST + String.valueOf(key)).getBytes(), VIEW.getBytes());
                     }
 
                     return null;
@@ -149,7 +126,10 @@ public class RedisService {
                 .filter(i -> keys.get(i) != null)
                 .collect(Collectors.toMap(
                         list::get,
-                        i -> Long.parseLong((String) keys.get(i))
+                        i -> {
+                            Integer in = (Integer) keys.get(i);
+                            return in.longValue();
+                        }
                 ));
 
         return collect;
