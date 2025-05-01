@@ -113,3 +113,9 @@ src/main/java/test/crudboard/
    - 게시글 100만개 기준
    - 게시글 목록 조회는 약 1000개의 요청까지 평균 500ms내외를 기록했음
    - 게시글 상세조회(댓글 90개 기준)는 약 400개의 요청까지 평균 500ms 내외를 기록했음
+
+### MCP를 사용한 게시글 불러오기
+   - MCP 서버를 만들어서 특정 명령어 실행 시 API를 통한 데이터 전달(오늘 인기있는 게시글 알려줘, XX게시글 보여줘)
+     ![image](https://github.com/user-attachments/assets/ff5dcabe-746f-49a5-a1cc-04114315bcff)
+
+
