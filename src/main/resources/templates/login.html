@@ -49,10 +49,6 @@
             font-weight: 700;
         }
 
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
         input {
             width: 100%;
             padding: 0.8rem;
@@ -154,17 +150,13 @@
 
     <form th:action="@{/login}" method="post">
         <div class="form-group">
-            <input type="text" name="username" placeholder="이메일" />
+        <input type="text" name="username" placeholder="이메일" />
         </div>
         <div class="form-group">
-            <input type="password" name="password" placeholder="비밀번호" />
+        <input type="password" name="password" placeholder="비밀번호" />
         </div>
-        <button type="submit" class="btn btn-login">로그인</button>
+    <button type="submit" class="btn btn-login">로그인</button>
     </form>
-
-    <div class="divider">
-        <span>또는</span>
-    </div>
 
     <a href="/oauth2/authorization/github" class="btn btn-github">
         GitHub으로 로그인

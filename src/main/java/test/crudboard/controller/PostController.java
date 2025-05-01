@@ -4,6 +4,7 @@ package test.crudboard.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
@@ -16,6 +17,7 @@ import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.post.dto.CreatePostDto;
 import test.crudboard.domain.entity.post.dto.PostDetailDto;
 import test.crudboard.domain.aop.valid.ResourceType;
+import test.crudboard.domain.entity.post.dto.ResultDto;
 import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.LikeService;
 import test.crudboard.service.image.ImageService;
@@ -94,6 +96,8 @@ public class PostController {
 
         return "post-detail";
     }
+
+
 
     @GetMapping(("/edit/{postId}"))
     @CheckResourceOwner(type = ResourceType.POST)

@@ -14,10 +14,9 @@ import java.util.List;
  */
 @Getter
 @Setter
-@AllArgsConstructor
-@NoArgsConstructor
 public class PostFooterDto {
-    private List<Comment> commentList;
-    private int startPage;
-    private int endPage;
+    private Long CommentId;
+    private Long postId;
+    private String content;
+    private String username;
 }

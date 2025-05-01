@@ -12,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import test.crudboard.domain.entity.comment.Comment;
+import test.crudboard.domain.entity.comment.dto.PostFooterDto;
 import test.crudboard.domain.entity.post.dto.PostDetailDto;
 import test.crudboard.domain.entity.post.dto.PostHeader;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
