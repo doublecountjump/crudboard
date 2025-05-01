@@ -16,6 +16,8 @@ import org.springframework.data.domain.PageRequest;
 import test.crudboard.service.CommentService;
 import test.crudboard.service.RedisService;
 
+import java.util.List;
+
 import static test.crudboard.domain.type.RedisField.*;
 
 
@@ -37,7 +39,6 @@ public class  PostService{
     //게시글 저장
     @Transactional
     public Post save(CreatePostDto createPostDto, Long id){
-
         Post post = Post.builder()
                 .head(createPostDto.getHead())
                 .context(createPostDto.getContext())

@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import test.crudboard.domain.entity.comment.Comment;
+import test.crudboard.domain.entity.comment.dto.PostFooterDto;
 import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.user.User;
 import test.crudboard.repository.JpaCommentRepository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static test.crudboard.domain.type.RedisField.COMMENT_COUNT;

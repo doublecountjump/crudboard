@@ -2,126 +2,345 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 상세</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        .comment-section {
-            margin-top: 40px;
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #6c757d;
+            --background-color: #f8f9fa;
+            --text-color: #333;
+            --border-color: #e9ecef;
+            --hover-color: #357ABD;
+            --danger-color: #dc3545;
         }
 
-        .comment-list {
-            border-bottom: 2px solid #ddd;
-            padding-bottom: 20px;
-            margin-bottom: 20px;
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .comment-form {
-            margin: 20px 0;
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--background-color);
         }
 
-        .comment-input {
-            width: 85%;
-            padding: 10px;
-            margin-right: 10px;
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
         }
 
-        .comment-btn {
-            padding: 10px 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        nav {
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 1rem;
+            margin-bottom: 2rem;
         }
 
-        .comment-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 10px;
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
         }
 
-        .reply-form {
-            margin-left: 30px;
-            margin-top: 10px;
-            display: none;
+        nav a:hover {
+            color: var(--primary-color);
         }
 
-        .reply-toggle {
-            color: #007bff;
-            cursor: pointer;
-            margin-top: 5px;
-            font-size: 0.9em;
+        .post-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-bottom: 2rem;
         }
 
-        .nested-comment {
-            margin-left: 30px;
-            border-left: 2px solid #eee;
-            padding-left: 10px;
-            margin-top: 10px;
-            background-color: #f9f9f9;
+        .post-header {
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border-color);
         }
 
-        .comment-header {
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .delete-btn {
-            background-color: #dc3545;
-            color: white;
-            padding: 5px 10px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-left: 10px;
-            float: right;
-        }
-
-        .comment-content {
-            display: inline-block;
-            margin-right: 10px;
-        }
-
-        .hidden {
-            display: none;
-        }
-
-        .load-more-container {
-            text-align: center;
-            margin: 15px 0;
-            padding: 10px;
-            border-bottom: 1px dashed #eee;
-        }
-
-        .load-more-btn {
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #007bff;
-            font-weight: bold;
-        }
-
-        .load-more-btn:hover {
-            background-color: #e9ecef;
-        }
-
-        .parent-comment {
-            margin-bottom: 10px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid #eee;
-        }
-
-        .child-comment {
-            margin-top: 5px;
-            margin-bottom: 5px;
+        .post-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-color);
+            margin-bottom: 1rem;
         }
 
         .post-info {
-            color: #666;
-            margin-bottom: 10px;
+            color: var(--secondary-color);
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .post-content {
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 2rem;
+            white-space: pre-wrap;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .like-section {
+            margin: 1rem 0;
+        }
+
+        .like-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--danger-color);
+            transition: transform 0.3s ease;
+        }
+
+        .like-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .comment-section {
+            margin-top: 3rem;
+        }
+
+        .comment-header {
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .comment-form {
+            margin-bottom: 2rem;
+        }
+
+        .comment-input {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .comment-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .comment-btn {
+            padding: 0.8rem 1.5rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .comment-btn:hover {
+            background-color: var(--hover-color);
+            transform: translateY(-1px);
+        }
+
+        .comment-list {
+            margin-top: 2rem;
+        }
+
+        .comment-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .parent-comment {
+            margin-bottom: 1rem;
+        }
+
+        .child-comment {
+            margin-left: 2rem;
+            padding-left: 1rem;
+            border-left: 2px solid var(--border-color);
+            background-color: var(--background-color);
+        }
+
+        .comment-content {
+            margin-bottom: 0.5rem;
+        }
+
+        .comment-info {
+            font-size: 0.9rem;
+            color: var(--secondary-color);
+        }
+
+        .reply-toggle {
+            color: var(--primary-color);
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .reply-form {
+            margin: 1rem 0;
+            padding: 1rem;
+            background-color: var(--background-color);
+            border-radius: 4px;
+            display: none;
+        }
+
+        .reply-form.active {
+            display: block;
+        }
+
+        .delete-btn {
+            float: right;
+            padding: 0.3rem 0.8rem;
+            background-color: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .post-title {
+                font-size: 1.5rem;
+            }
+
+            .post-content {
+                font-size: 1rem;
+            }
+
+            .child-comment {
+                margin-left: 1rem;
+            }
+        }
+
+        /* 이미지 관련 스타일 추가 */
+        .post-images {
+            margin-top: 2rem;
+        }
+
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .image-item {
+            position: relative;
+            padding-bottom: 75%;
+            overflow: hidden;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .image-item img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .image-item:hover img {
+            transform: scale(1.05);
+        }
+
+        /* 이미지 모달 스타일 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            margin: auto;
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+                gap: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .image-grid {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
         }
     </style>
     <script>
@@ -181,6 +400,29 @@
                     .catch(() => alert('삭제 중 오류가 발생했습니다.'));
             }
         }
+
+        function toggleReplyForm(commentId) {
+            const replyForm = document.getElementById(`reply-form-${commentId}`);
+            const replyToggle = document.querySelector(`[onclick="toggleReplyForm(${commentId})"]`);
+
+            // 다른 모든 답글 폼을 닫습니다
+            document.querySelectorAll('.reply-form').forEach(form => {
+                if (form.id !== `reply-form-${commentId}`) {
+                    form.classList.remove('active');
+                }
+            });
+
+            // 현재 답글 폼을 토글합니다
+            replyForm.classList.toggle('active');
+
+            // 버튼 텍스트 변경
+            if (replyForm.classList.contains('active')) {
+                replyToggle.textContent = '답글 취소';
+            } else {
+                replyToggle.textContent = '답글 달기';
+            }
+        }
+
         function toggleCommentGroup(groupNumber) {
             const comments = document.querySelectorAll('.comment-group-' + groupNumber);
             const button = document.getElementById('load-more-btn-' + groupNumber);
@@ -207,6 +449,25 @@
                 button.textContent = '접기 (' + startIndex + '-' + endIndex + ')';
             }
         }
+
+        // 이미지 모달 관련 스크립트 추가
+        function showImage(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = "block";
+            modalImg.src = src;
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = "none";
+        }
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(event) {
+            if (event.key === "Escape") {
+                closeModal();
+            }
+        });
     </script>
 </head>
 <body>
@@ -237,8 +498,18 @@
             </button>
         </form>
     </div>
-    <div class="post-content" th:text="${header.context}">
-        내용
+
+    <!-- 이미지 표시 영역을 내용 위로 이동 -->
+    <div class="post-images" th:if="${images != null and not #lists.isEmpty(images)}">
+        <div class="image-grid">
+            <div class="image-item" th:each="imageUrl : ${images}" th:if="${imageUrl != null}">
+                <img th:src="${imageUrl}" alt="게시글 이미지" onclick="showImage(this.src)">
+            </div>
+        </div>
+    </div>
+
+    <div class="post-content">
+        <p th:text="${header.context}"></p>
     </div>
 
     <!-- 댓글 목록 -->
@@ -292,6 +563,12 @@
             <button type="submit" class="comment-btn">댓글 작성</button>
         </form>
     </div>
+</div>
+
+<!-- 이미지 모달 추가 -->
+<div id="imageModal" class="modal" onclick="closeModal()">
+    <span class="modal-close">&times;</span>
+    <img class="modal-content" id="modalImage">
 </div>
 </body>
 </html>

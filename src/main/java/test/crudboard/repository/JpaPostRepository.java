@@ -1,6 +1,7 @@
 package test.crudboard.repository;
 
 import jakarta.persistence.LockModeType;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 import test.crudboard.domain.entity.post.Post;
 import test.crudboard.domain.entity.post.dto.PostHeaderDto;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,4 +58,6 @@ public interface JpaPostRepository extends JpaRepository<Post, Long> {
     @Query("select max(p.id) from Post p")
     Long maxPostId();
 
+    @Query(MAIN_TITLE_SQL+ "from Post p left join p.user u where p.created between :yday and :now order by p.view desc limit 3")
+    List<PostHeaderDto> findPopularPostList(@Param("yday") LocalDateTime yesterday, @Param("now")LocalDateTime now);
 }

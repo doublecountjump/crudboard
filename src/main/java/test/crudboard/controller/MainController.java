@@ -62,7 +62,8 @@ public class MainController {
     }
 
     @GetMapping("/search")
-    public String searchPost(@Valid @ModelAttribute SearchRequestDto search, @AuthenticationPrincipal JwtUserDetails user, Model model){
+    public String searchPost(@Valid @ModelAttribute SearchRequestDto search,
+                             @AuthenticationPrincipal JwtUserDetails user, Model model){
         int page = search.getPage();
         String text = search.getContent();
         Page<PostHeaderDto> titleDto = switch (search.getType()){
