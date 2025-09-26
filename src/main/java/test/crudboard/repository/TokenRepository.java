@@ -3,8 +3,7 @@ package test.crudboard.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
-import test.crudboard.controller.TokenController;
-import test.crudboard.entity.Token;
+import test.crudboard.domain.entity.token.Token;
 
 import java.util.Optional;
 

@@ -69,22 +69,6 @@
         <button onclick="toggleSection('comments')" class="btn btn-primary">댓글 보기</button>
     </div>
 
-    <div id="posts" class="content-section">
-        <h3>내 게시글 목록</h3>
-        <div th:each="post : ${userInfo.postList}" class="item">
-            <a th:href="@{/post/{id}(id=${post.id})}" th:text="${post.head}">게시글 제목</a>
-        </div>
-    </div>
-
-    <div id="comments" class="content-section">
-        <h3>내 댓글 목록</h3>
-        <div th:each="comment : ${userInfo.commentList}" class="item">
-            <p th:text="${comment.content}">댓글 내용</p>
-            <small>
-                게시글: <a th:href="@{/post/{id}(id=${comment.post.id})}" th:text="${comment.post.head}">게시글 제목</a>
-            </small>
-        </div>
-    </div>
 </div>
 </body>
 </html>

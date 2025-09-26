@@ -7,9 +7,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
-import test.crudboard.aop.annotation.CheckResourceOwner;
-import test.crudboard.entity.enumtype.ResourceType;
-import test.crudboard.provider.JwtUserDetails;
+import test.crudboard.domain.aop.valid.CheckResourceOwner;
+import test.crudboard.domain.aop.valid.ResourceType;
+import test.crudboard.security.provider.JwtUserDetails;
 import test.crudboard.service.CommentService;
 
 @Controller
@@ -24,18 +24,20 @@ public class CommentController {
     @PostMapping("/{postId}")
     public String addComment(@PathVariable Long postId, String content,
                              @AuthenticationPrincipal JwtUserDetails user){
+        //부모 댓글 저장
+        commentService.saveParentComment(postId, content, user.getId());
 
-        commentService.saveParentComment(postId, content, user.getUsername());
-
-        return "redirect:/post/" + postId;
+        return "redirect:/post/detail/" + postId;
     }
 
     @PostMapping("/{postId}/{parentId}")
-    public String addReplyComment(@PathVariable Long postId, @PathVariable Long parentId,
+    public String addChildComment(@PathVariable Long postId, @PathVariable Long parentId,
                                   String content, @AuthenticationPrincipal JwtUserDetails user){
-        commentService.saveChildComment(postId, parentId, content, user.getUsername());
 
-        return "redirect:/post/" + postId;
+        //자식 댓글 저장
+        commentService.saveChildComment(postId, parentId, content, user.getId());
+
+        return "redirect:/post/detail/" + postId;
     }
 
 
@@ -44,7 +46,9 @@ public class CommentController {
     @ResponseBody
     public void deletePost(@PathVariable Long commentId, @AuthenticationPrincipal Object user,
                            @PathVariable Long postId){
-        commentService.deleteComment(commentId);
+        //해당 댓글 삭제, 부모댓글의 경우 자식댓글들 또한 삭제
+        commentService.deleteComment(postId, commentId);
+
     }
 
 }
