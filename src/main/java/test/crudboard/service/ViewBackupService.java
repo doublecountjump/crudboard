@@ -27,7 +27,6 @@ import static test.crudboard.domain.type.RedisField.VIEW;
 @Slf4j
 public class ViewBackupService {
     private final RedisTemplate<String, String> redisTemplate;
-    private final JpaPostRepository postRepository;
     private final BackUpRepository backUpRepository;
 
     @Scheduled(fixedRate = 60 * 1000) // 5분마다 실행
